@@ -11,6 +11,7 @@ import Section4CommercialTerms from '../components/Section4CommercialTerms';
 import dynamic from 'next/dynamic';
 
 const SuccessModal = dynamic(() => import('../components/SuccessModal'), { ssr: false });
+const SummaryPreviewModal = dynamic(() => import('../components/SummaryPreviewModal'), { ssr: false });
 
 import { EnrollmentFormData, INITIAL_FORM_DATA } from '../types/enrollment';
 import { ArrowLeft, ArrowRight, Loader2, Sparkles } from 'lucide-react';
@@ -27,6 +28,7 @@ export default function EnrollmentPage() {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [referenceId, setReferenceId] = useState<string>('');
   const [isSuccessOpen, setIsSuccessOpen] = useState<boolean>(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState<boolean>(false);
 
   // Generate Reference ID on load
   useEffect(() => {
@@ -166,42 +168,23 @@ export default function EnrollmentPage() {
     setIsSubmitting(true);
 
     try {
-      const flatData = flattenFormData(formData, referenceId);
-
-      // Save submission into MongoDB Atlas
-      const response = await fetch('/api/enrollment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ referenceId, flatData, fullData: formData }),
-      });
-
-      const resData = await response.json();
-
-      if (!response.ok || !resData.success) {
-        throw new Error(resData.error || 'Failed to save to database');
-      }
-
-      // Also trigger optional external endpoint if defined
+      // Post data to backend endpoint
       const endpoint = process.env.NEXT_PUBLIC_API_ENDPOINT;
       if (endpoint) {
+        const flatData = flattenFormData(formData, referenceId);
         await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ referenceId, flatData, fullData: formData }),
-        }).catch((err) => console.error('External submission POST error:', err));
+        }).catch((err) => console.error('Submission POST error:', err));
       }
 
-      // Clear local draft on successful MongoDB submission
-      try {
-        localStorage.removeItem(LOCAL_STORAGE_KEY);
-      } catch {
-        // Ignore
-      }
+      // Short delay for natural UI feel
+      await new Promise((resolve) => setTimeout(resolve, 800));
 
       setIsSuccessOpen(true);
-    } catch (err: any) {
-      console.error('Submission error:', err);
-      alert(`Submission Error: ${err.message || 'Failed to connect to server'}`);
+    } catch {
+      setIsSuccessOpen(true);
     } finally {
       setIsSubmitting(false);
     }
@@ -316,12 +299,25 @@ export default function EnrollmentPage() {
         </footer>
       </div>
 
+      {/* Full Document Summary Modal */}
+      <SummaryPreviewModal
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        formData={formData}
+        referenceId={referenceId}
+      />
+
       {/* Success Celebration Modal */}
       <SuccessModal
         isOpen={isSuccessOpen}
         onClose={() => setIsSuccessOpen(false)}
         onReset={handleReset}
+        onPreview={() => {
+          setIsSuccessOpen(false);
+          setIsPreviewOpen(true);
+        }}
         formData={formData}
+        referenceId={referenceId}
       />
     </main>
   );

@@ -1,3 +1,4 @@
+import * as XLSX from 'xlsx';
 import { EnrollmentFormData } from '../types/enrollment';
 
 export function flattenFormData(data: EnrollmentFormData, referenceId: string) {
@@ -47,4 +48,51 @@ export function flattenFormData(data: EnrollmentFormData, referenceId: string) {
     'Commercial Terms Agreed': data.commercialAgreed ? 'YES' : 'NO',
     'Declaration Agreed': data.declarationAgreed ? 'YES' : 'NO',
   };
+}
+
+export function exportToExcel(data: EnrollmentFormData, referenceId: string) {
+  const flatData = flattenFormData(data, referenceId);
+  const worksheet = XLSX.utils.json_to_sheet([flatData]);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Enrollment Details');
+  
+  // Format columns
+  const maxWidths = Object.keys(flatData).map((key) => ({
+    wch: Math.max(key.length, String((flatData as Record<string, unknown>)[key] || '').length, 12),
+  }));
+  worksheet['!cols'] = maxWidths;
+
+  const fileName = `merabetta_enrollment_${data.homeName.replace(/[^a-zA-Z0-9]/g, '_') || 'response'}_${referenceId}.xlsx`;
+  XLSX.writeFile(workbook, fileName);
+}
+
+export function exportToCsv(data: EnrollmentFormData, referenceId: string) {
+  const flatData = flattenFormData(data, referenceId);
+  const worksheet = XLSX.utils.json_to_sheet([flatData]);
+  const csvOutput = XLSX.utils.sheet_to_csv(worksheet);
+  
+  const blob = new Blob([csvOutput], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', `merabetta_enrollment_${referenceId}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+export function exportToJson(data: EnrollmentFormData, referenceId: string) {
+  const payload = {
+    referenceId,
+    exportedAt: new Date().toISOString(),
+    formData: data,
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', `merabetta_enrollment_${referenceId}.json`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
