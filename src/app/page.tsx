@@ -320,9 +320,7 @@ export default function EnrollmentPage() {
         isOpen={isSuccessOpen}
         onClose={() => setIsSuccessOpen(false)}
         onReset={handleReset}
-        onPreview={() => {}}
         formData={formData}
-        referenceId={referenceId}
       />
     </main>
   );
