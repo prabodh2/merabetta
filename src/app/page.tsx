@@ -11,7 +11,6 @@ import Section4CommercialTerms from '../components/Section4CommercialTerms';
 import dynamic from 'next/dynamic';
 
 const SuccessModal = dynamic(() => import('../components/SuccessModal'), { ssr: false });
-const SummaryPreviewModal = dynamic(() => import('../components/SummaryPreviewModal'), { ssr: false });
 
 import { EnrollmentFormData, INITIAL_FORM_DATA } from '../types/enrollment';
 import { ArrowLeft, ArrowRight, Loader2, Sparkles } from 'lucide-react';
@@ -28,7 +27,6 @@ export default function EnrollmentPage() {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [referenceId, setReferenceId] = useState<string>('');
   const [isSuccessOpen, setIsSuccessOpen] = useState<boolean>(false);
-  const [isPreviewOpen, setIsPreviewOpen] = useState<boolean>(false);
 
   // Generate Reference ID on load
   useEffect(() => {
@@ -318,25 +316,12 @@ export default function EnrollmentPage() {
         </footer>
       </div>
 
-      {/* Full Document Summary Modal */}
-      <SummaryPreviewModal
-        isOpen={isPreviewOpen}
-        onClose={() => setIsPreviewOpen(false)}
-        formData={formData}
-        referenceId={referenceId}
-      />
-
       {/* Success Celebration Modal */}
       <SuccessModal
         isOpen={isSuccessOpen}
         onClose={() => setIsSuccessOpen(false)}
         onReset={handleReset}
-        onPreview={() => {
-          setIsSuccessOpen(false);
-          setIsPreviewOpen(true);
-        }}
         formData={formData}
-        referenceId={referenceId}
       />
     </main>
   );
