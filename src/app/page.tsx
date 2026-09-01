@@ -168,23 +168,42 @@ export default function EnrollmentPage() {
     setIsSubmitting(true);
 
     try {
-      // Post data to backend endpoint
+      const flatData = flattenFormData(formData, referenceId);
+
+      // Save submission into MongoDB Atlas
+      const response = await fetch('/api/enrollment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ referenceId, flatData, fullData: formData }),
+      });
+
+      const resData = await response.json();
+
+      if (!response.ok || !resData.success) {
+        throw new Error(resData.error || 'Failed to save to database');
+      }
+
+      // Also trigger optional external endpoint if defined
       const endpoint = process.env.NEXT_PUBLIC_API_ENDPOINT;
       if (endpoint) {
-        const flatData = flattenFormData(formData, referenceId);
         await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ referenceId, flatData, fullData: formData }),
-        }).catch((err) => console.error('Submission POST error:', err));
+        }).catch((err) => console.error('External submission POST error:', err));
       }
 
-      // Short delay for natural UI feel
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      // Clear local draft on successful MongoDB submission
+      try {
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+      } catch {
+        // Ignore
+      }
 
       setIsSuccessOpen(true);
-    } catch {
-      setIsSuccessOpen(true);
+    } catch (err: any) {
+      console.error('Submission error:', err);
+      alert(`Submission Error: ${err.message || 'Failed to connect to server'}`);
     } finally {
       setIsSubmitting(false);
     }
