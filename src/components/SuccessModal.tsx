@@ -17,6 +17,7 @@ interface SuccessModalProps {
 
 export default function SuccessModal({
   isOpen,
+  onClose,
   onReset,
   formData,
 }: SuccessModalProps) {
@@ -61,7 +62,10 @@ export default function SuccessModal({
         {/* Bottom Actions */}
         <div className="mt-8 pt-4 border-t border-slate-100 flex flex-col gap-2">
           <button
-            onClick={onReset}
+            onClick={() => {
+              onReset();
+              if (onClose) onClose();
+            }}
             className="w-full py-3.5 bg-[#E86A33] hover:bg-[#D85820] text-white text-xs sm:text-sm font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <PlusCircle className="w-4 h-4" />

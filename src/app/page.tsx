@@ -139,20 +139,30 @@ export default function EnrollmentPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const resetForm = () => {
+    setFormData(INITIAL_FORM_DATA);
+    setErrors({});
+    setCompletedSteps([]);
+    setCurrentStep(1);
+    setIsSuccessOpen(false);
+    try {
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+    } catch {
+      // Ignore
+    }
+    const randomCode = Math.floor(100000 + Math.random() * 900000);
+    setReferenceId(`MB-OAH-${randomCode}`);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleReset = () => {
     if (window.confirm('Are you sure you want to reset and clear all entered form data?')) {
-      setFormData(INITIAL_FORM_DATA);
-      setErrors({});
-      setCompletedSteps([]);
-      setCurrentStep(1);
-      try {
-        localStorage.removeItem(LOCAL_STORAGE_KEY);
-      } catch {
-        // Ignore
-      }
-      const randomCode = Math.floor(100000 + Math.random() * 900000);
-      setReferenceId(`MB-OAH-${randomCode}`);
+      resetForm();
     }
+  };
+
+  const handleNewSubmission = () => {
+    resetForm();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -319,7 +329,7 @@ export default function EnrollmentPage() {
       <SuccessModal
         isOpen={isSuccessOpen}
         onClose={() => setIsSuccessOpen(false)}
-        onReset={handleReset}
+        onReset={handleNewSubmission}
         formData={formData}
       />
     </main>
