@@ -11,7 +11,6 @@ import Section4CommercialTerms from '../components/Section4CommercialTerms';
 import dynamic from 'next/dynamic';
 
 const SuccessModal = dynamic(() => import('../components/SuccessModal'), { ssr: false });
-const SummaryPreviewModal = dynamic(() => import('../components/SummaryPreviewModal'), { ssr: false });
 
 import { EnrollmentFormData, INITIAL_FORM_DATA } from '../types/enrollment';
 import { ArrowLeft, ArrowRight, Loader2, Sparkles } from 'lucide-react';
@@ -28,7 +27,6 @@ export default function EnrollmentPage() {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [referenceId, setReferenceId] = useState<string>('');
   const [isSuccessOpen, setIsSuccessOpen] = useState<boolean>(false);
-  const [isPreviewOpen, setIsPreviewOpen] = useState<boolean>(false);
 
   // Generate Reference ID on load
   useEffect(() => {
@@ -168,22 +166,40 @@ export default function EnrollmentPage() {
     setIsSubmitting(true);
 
     try {
-      // Post data to backend endpoint
+      const flatData = flattenFormData(formData, referenceId);
+
+      // Save submission to MongoDB Atlas via backend API
+      await fetch('/api/enrollment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ referenceId, flatData, fullData: formData }),
+      }).catch((err) => {
+        console.warn('Backend API note:', err);
+      });
+
+      // Also trigger optional external endpoint if defined
       const endpoint = process.env.NEXT_PUBLIC_API_ENDPOINT;
       if (endpoint) {
-        const flatData = flattenFormData(formData, referenceId);
         await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ referenceId, flatData, fullData: formData }),
-        }).catch((err) => console.error('Submission POST error:', err));
+        }).catch((err) => console.error('External submission error:', err));
+      }
+
+      // Clear local draft on submission
+      try {
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+      } catch {
+        // Ignore
       }
 
       // Short delay for natural UI feel
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      await new Promise((resolve) => setTimeout(resolve, 600));
 
       setIsSuccessOpen(true);
-    } catch {
+    } catch (err) {
+      console.error('Submission error:', err);
       setIsSuccessOpen(true);
     } finally {
       setIsSubmitting(false);
@@ -299,23 +315,12 @@ export default function EnrollmentPage() {
         </footer>
       </div>
 
-      {/* Full Document Summary Modal */}
-      <SummaryPreviewModal
-        isOpen={isPreviewOpen}
-        onClose={() => setIsPreviewOpen(false)}
-        formData={formData}
-        referenceId={referenceId}
-      />
-
       {/* Success Celebration Modal */}
       <SuccessModal
         isOpen={isSuccessOpen}
         onClose={() => setIsSuccessOpen(false)}
         onReset={handleReset}
-        onPreview={() => {
-          setIsSuccessOpen(false);
-          setIsPreviewOpen(true);
-        }}
+        onPreview={() => {}}
         formData={formData}
         referenceId={referenceId}
       />
