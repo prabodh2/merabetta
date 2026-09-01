@@ -77,7 +77,7 @@ export default function ExportPage() {
         <header className="flex items-center justify-between rounded-xl border border-orange-100 bg-white px-4 py-3 shadow-sm">
           <BrandLogo />
           <Link
-            href="/"
+            href="/enrollment"
             className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             Enrollment Form
