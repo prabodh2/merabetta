@@ -1,19 +1,10 @@
+'use client';
+
 import React from 'react';
 import { Building, Stethoscope, FileUp, Handshake, Check } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 
-interface Step {
-  id: number;
-  title: string;
-  shortTitle: string;
-  icon: React.ElementType;
-}
-
-export const FORM_STEPS: Step[] = [
-  { id: 1, title: 'Organisation Info', shortTitle: 'Org Info', icon: Building },
-  { id: 2, title: 'Facility Details', shortTitle: 'Facility', icon: Stethoscope },
-  { id: 3, title: 'Documents Upload', shortTitle: 'Documents', icon: FileUp },
-  { id: 4, title: 'Terms & Declaration', shortTitle: 'Terms', icon: Handshake },
-];
+const STEP_ICONS = [Building, Stethoscope, FileUp, Handshake];
 
 interface ProgressBarProps {
   currentStep: number;
@@ -22,38 +13,41 @@ interface ProgressBarProps {
 }
 
 export default function ProgressBar({ currentStep, onStepClick, completedSteps }: ProgressBarProps) {
-  const percentage = Math.round(((currentStep - 1) / (FORM_STEPS.length - 1)) * 100);
+  const { t } = useLanguage();
+  const steps = t.progress.steps;
+  const percentage = Math.round(((currentStep - 1) / (steps.length - 1)) * 100);
 
   return (
     <div className="w-full bg-white rounded-xl border border-slate-200 shadow-xs p-4 sm:p-5">
       {/* Mobile view progress text */}
       <div className="flex items-center justify-between text-xs font-semibold text-slate-600 mb-2">
         <span className="text-[#E86A33] font-bold">
-          Step {currentStep} of {FORM_STEPS.length}: {FORM_STEPS[currentStep - 1].title}
+          {t.progress.stepOf(currentStep, steps.length)} {steps[currentStep - 1].title}
         </span>
-        <span className="text-slate-500 font-medium">{percentage}% Completed</span>
+        <span className="text-slate-500 font-medium">{percentage}{t.progress.completed}</span>
       </div>
 
       {/* Progress Bar Track */}
       <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-3">
         <div
           className="h-full bg-[#E86A33] transition-all duration-300 ease-out"
-          style={{ width: `${((currentStep) / FORM_STEPS.length) * 100}%` }}
+          style={{ width: `${(currentStep / steps.length) * 100}%` }}
         />
       </div>
 
-      {/* Stepper Buttons (Desktop & Tablet) */}
+      {/* Stepper Buttons */}
       <div className="grid grid-cols-4 gap-1.5">
-        {FORM_STEPS.map((step) => {
-          const Icon = step.icon;
-          const isActive = currentStep === step.id;
-          const isCompleted = completedSteps.includes(step.id);
+        {steps.map((step, idx) => {
+          const stepId = idx + 1;
+          const Icon = STEP_ICONS[idx];
+          const isActive = currentStep === stepId;
+          const isCompleted = completedSteps.includes(stepId);
 
           return (
             <button
-              key={step.id}
+              key={stepId}
               type="button"
-              onClick={() => onStepClick(step.id)}
+              onClick={() => onStepClick(stepId)}
               className={`flex flex-col items-center text-center p-1.5 rounded-lg transition-all cursor-pointer group ${
                 isActive
                   ? 'bg-orange-50 text-[#E86A33] font-semibold'

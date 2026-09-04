@@ -5,6 +5,7 @@ import confetti from 'canvas-confetti';
 import { EnrollmentFormData } from '../types/enrollment';
 import { CheckCircle2, PlusCircle } from 'lucide-react';
 import BrandLogo from './BrandLogo';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface SuccessModalProps {
   isOpen: boolean;
@@ -21,6 +22,9 @@ export default function SuccessModal({
   onReset,
   formData,
 }: SuccessModalProps) {
+  const { t } = useLanguage();
+  const s = t.success;
+
   useEffect(() => {
     if (isOpen) {
       // Fire festive confetti
@@ -48,15 +52,13 @@ export default function SuccessModal({
         </div>
 
         <span className="inline-block px-3 py-1 bg-orange-50 text-[#E86A33] text-xs font-bold rounded-full mb-2 border border-orange-200">
-          Application Submitted Successfully
+          {s.badge}
         </span>
 
-        <h2 className="text-2xl font-black text-slate-900 tracking-tight">
-          Enrollment Received!
-        </h2>
+        <h2 className="text-2xl font-black text-slate-900 tracking-tight">{s.title}</h2>
 
         <p className="text-xs sm:text-sm text-slate-600 mt-3 leading-relaxed">
-          Thank you for enrolling <strong className="text-slate-800 font-semibold">{formData.homeName || 'your facility'}</strong> with Vision55 Megacare Pvt. Ltd. (merabetta.com). Our team will review the submitted details and contact you for active onboarding.
+          {s.body(formData.homeName || 'your facility')}
         </p>
 
         {/* Bottom Actions */}
@@ -69,11 +71,10 @@ export default function SuccessModal({
             className="w-full py-3.5 bg-[#E86A33] hover:bg-[#D85820] text-white text-xs sm:text-sm font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <PlusCircle className="w-4 h-4" />
-            Submit Another Old Age Home Form
+            {s.newForm}
           </button>
         </div>
       </div>
     </div>
   );
 }
-

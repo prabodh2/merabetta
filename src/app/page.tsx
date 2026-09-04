@@ -15,10 +15,13 @@ const SuccessModal = dynamic(() => import('../components/SuccessModal'), { ssr: 
 import { EnrollmentFormData, INITIAL_FORM_DATA } from '../types/enrollment';
 import { ArrowLeft, ArrowRight, Loader2, Sparkles } from 'lucide-react';
 import { flattenFormData } from '../utils/exportHelpers';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const LOCAL_STORAGE_KEY = 'merabetta_enrollment_draft_v1';
 
 export default function EnrollmentPage() {
+  const { t } = useLanguage();
+
   const [formData, setFormData] = useState<EnrollmentFormData>(INITIAL_FORM_DATA);
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
@@ -75,53 +78,58 @@ export default function EnrollmentPage() {
     }
   };
 
-  // Step Validations
-  const validateCurrentStep = (step: number): boolean => {
-    const stepErrors: Record<string, string> = {};
+  // Step Validations — use translated error strings from current language
+  const validateCurrentStep = useCallback(
+    (step: number): boolean => {
+      const stepErrors: Record<string, string> = {};
+      const err = t.errors;
 
-    if (step === 1) {
-      if (!formData.homeName.trim()) stepErrors.homeName = 'Please enter the name of the Old Age Home.';
-      if (!formData.registrationNumber.trim()) stepErrors.registrationNumber = 'Registration number is required.';
-      if (!formData.yearEstablished.trim()) stepErrors.yearEstablished = 'Year established is required.';
-      if (!formData.address.trim()) stepErrors.address = 'Full address is required.';
-      if (!formData.city.trim()) stepErrors.city = 'City is required.';
-      if (!formData.state.trim()) stepErrors.state = 'State is required.';
-      if (!formData.pinCode.trim() || formData.pinCode.length !== 6) {
-        stepErrors.pinCode = 'Valid 6-digit PIN code is required.';
+      if (step === 1) {
+        if (!formData.homeName.trim()) stepErrors.homeName = err.homeName;
+        if (!formData.registrationNumber.trim()) stepErrors.registrationNumber = err.registrationNumber;
+        if (!formData.yearEstablished.trim()) stepErrors.yearEstablished = err.yearEstablished;
+        if (!formData.address.trim()) stepErrors.address = err.address;
+        if (!formData.city.trim()) stepErrors.city = err.city;
+        if (!formData.state.trim()) stepErrors.state = err.state;
+        if (!formData.pinCode.trim() || formData.pinCode.length !== 6) {
+          stepErrors.pinCode = err.pinCode;
+        }
+        if (!formData.contactPersonName.trim()) stepErrors.contactPersonName = err.contactPersonName;
+        if (!formData.designation.trim()) stepErrors.designation = err.designation;
+        if (!formData.mobileNumber.trim() || formData.mobileNumber.length !== 10) {
+          stepErrors.mobileNumber = err.mobileNumber;
+        }
+        if (!formData.emailAddress.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.emailAddress)) {
+          stepErrors.emailAddress = err.emailAddress;
+        }
       }
-      if (!formData.contactPersonName.trim()) stepErrors.contactPersonName = 'Contact person name is required.';
-      if (!formData.designation.trim()) stepErrors.designation = 'Designation is required.';
-      if (!formData.mobileNumber.trim() || formData.mobileNumber.length !== 10) {
-        stepErrors.mobileNumber = 'Valid 10-digit mobile number is required.';
-      }
-      if (!formData.emailAddress.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.emailAddress)) {
-        stepErrors.emailAddress = 'Valid email address is required.';
-      }
-    }
 
-    if (step === 2) {
-      if (!formData.totalCapacity.trim() || parseInt(formData.totalCapacity, 10) <= 0) {
-        stepErrors.totalCapacity = 'Please enter valid total capacity.';
+      if (step === 2) {
+        if (!formData.totalCapacity.trim() || parseInt(formData.totalCapacity, 10) <= 0) {
+          stepErrors.totalCapacity = err.totalCapacity;
+        }
+        if (!formData.currentResidents.trim() || parseInt(formData.currentResidents, 10) < 0) {
+          stepErrors.currentResidents = err.currentResidents;
+        }
       }
-      if (!formData.currentResidents.trim() || parseInt(formData.currentResidents, 10) < 0) {
-        stepErrors.currentResidents = 'Please enter valid current resident count.';
-      }
-    }
 
-    if (step === 4) {
-      if (!formData.commercialAgreed) {
-        stepErrors.commercialAgreed = 'You must accept the commercial terms to continue.';
+      if (step === 4) {
+        if (!formData.commercialAgreed) {
+          stepErrors.commercialAgreed = err.commercialAgreed;
+        }
+        if (!formData.declarationAgreed) {
+          stepErrors.declarationAgreed = err.declarationAgreed;
+        }
       }
-      if (!formData.declarationAgreed) {
-        stepErrors.declarationAgreed = 'You must confirm and agree to the declaration.';
-      }
-    }
 
-    setErrors(stepErrors);
-    return Object.keys(stepErrors).length === 0;
-  };
+      setErrors(stepErrors);
+      return Object.keys(stepErrors).length === 0;
+    },
+    [formData, t.errors]
+  );
 
   const handleNext = () => {
+    if (!validateCurrentStep(currentStep)) return;
     if (!completedSteps.includes(currentStep)) {
       setCompletedSteps((prev) => [...prev, currentStep]);
     }
@@ -156,7 +164,7 @@ export default function EnrollmentPage() {
   };
 
   const handleReset = () => {
-    if (window.confirm('Are you sure you want to reset and clear all entered form data?')) {
+    if (window.confirm(t.nav.confirmReset)) {
       resetForm();
     }
   };
@@ -263,8 +271,6 @@ export default function EnrollmentPage() {
             />
           )}
 
-
-
           {/* Bottom Navigation & Action Bar */}
           <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-3 sticky bottom-4 z-20">
             <div>
@@ -275,14 +281,14 @@ export default function EnrollmentPage() {
                   className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-all cursor-pointer"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  Back
+                  {t.nav.back}
                 </button>
               )}
             </div>
 
             <div className="flex items-center gap-3">
               <span className="text-xs text-slate-500 hidden sm:inline">
-                Page {currentStep} of 4
+                {t.nav.pageOf(currentStep, 4)}
               </span>
               {currentStep < 4 ? (
                 <button
@@ -290,7 +296,7 @@ export default function EnrollmentPage() {
                   onClick={handleNext}
                   className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#E86A33] hover:bg-[#D85820] text-white text-xs font-bold rounded-lg shadow-sm transition-all cursor-pointer"
                 >
-                  <span>Next</span>
+                  <span>{t.nav.next}</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               ) : (
@@ -302,12 +308,12 @@ export default function EnrollmentPage() {
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Submitting...
+                      {t.nav.submitting}
                     </>
                   ) : (
                     <>
                       <Sparkles className="w-4 h-4" />
-                      Submit
+                      {t.nav.submit}
                     </>
                   )}
                 </button>
@@ -318,10 +324,8 @@ export default function EnrollmentPage() {
 
         {/* Footer */}
         <footer className="text-center text-xs text-slate-400 py-6 space-y-1">
-          <p>© {new Date().getFullYear()} Vision55 Megacare Private Limited. All rights reserved.</p>
-          <p className="text-[11px] text-slate-400">
-            merabetta.com • Senior Living & Healthcare Platform
-          </p>
+          <p>{t.footer.rights(new Date().getFullYear())}</p>
+          <p className="text-[11px] text-slate-400">{t.footer.tagline}</p>
         </footer>
       </div>
 
