@@ -14,8 +14,8 @@ const SuccessModal = dynamic(() => import('../components/SuccessModal'), { ssr: 
 
 import { EnrollmentFormData, INITIAL_FORM_DATA } from '../types/enrollment';
 import { ArrowLeft, ArrowRight, Loader2, Sparkles } from 'lucide-react';
-import { flattenFormData } from '../utils/exportHelpers';
 import { useLanguage } from '../i18n/LanguageContext';
+import { submitEnrollment, notifyExternalEndpoint } from '../services/enrollmentApi';
 
 const LOCAL_STORAGE_KEY = 'merabetta_enrollment_draft_v1';
 
@@ -28,6 +28,7 @@ export default function EnrollmentPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [referenceId, setReferenceId] = useState<string>('');
   const [isSuccessOpen, setIsSuccessOpen] = useState<boolean>(false);
 
@@ -182,43 +183,32 @@ export default function EnrollmentPage() {
     }
 
     setIsSubmitting(true);
+    setSubmissionError(null);
 
     try {
-      const flatData = flattenFormData(formData, referenceId);
+      // ── Primary: save to MongoDB Atlas via service layer (with retry + timeout) ──
+      await submitEnrollment({ referenceId, formData });
 
-      // Save submission to MongoDB Atlas via backend API
-      await fetch('/api/enrollment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ referenceId, flatData, fullData: formData }),
-      }).catch((err) => {
-        console.warn('Backend API note:', err);
-      });
+      // ── Secondary: notify optional external webhook (non-fatal) ──
+      await notifyExternalEndpoint({ referenceId, formData });
 
-      // Also trigger optional external endpoint if defined
-      const endpoint = process.env.NEXT_PUBLIC_API_ENDPOINT;
-      if (endpoint) {
-        await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ referenceId, flatData, fullData: formData }),
-        }).catch((err) => console.error('External submission error:', err));
-      }
-
-      // Clear local draft on submission
+      // Clear local draft on successful submission
       try {
         localStorage.removeItem(LOCAL_STORAGE_KEY);
       } catch {
-        // Ignore
+        // Ignore quota errors
       }
 
       // Short delay for natural UI feel
       await new Promise((resolve) => setTimeout(resolve, 600));
 
       setIsSuccessOpen(true);
-    } catch (err) {
-      console.error('Submission error:', err);
-      setIsSuccessOpen(true);
+    } catch (err: any) {
+      console.error('[handleSubmit] Submission failed after retries:', err);
+      // Show inline error so user knows something went wrong
+      setSubmissionError(
+        err?.message ?? 'Submission failed. Please check your connection and try again.'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -269,6 +259,14 @@ export default function EnrollmentPage() {
               onChange={handleFieldChange}
               errors={errors}
             />
+          )}
+
+          {/* Submission Error Banner */}
+          {submissionError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 text-xs font-medium px-4 py-3 rounded-xl flex items-start gap-2">
+              <span className="mt-0.5">⚠️</span>
+              <span>{submissionError}</span>
+            </div>
           )}
 
           {/* Bottom Navigation & Action Bar */}
