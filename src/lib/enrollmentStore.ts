@@ -4,7 +4,7 @@ import clientPromise from './mongodb';
 import { flattenFormData } from '../utils/exportHelpers';
 
 const DB_NAME = 'merabetta';
-const COLLECTION_NAME = 'enrollments';
+const COLLECTION_NAME = process.env.MONGODB_COLLECTION || 'old age home registration';
 
 // Global in-memory cache for original records when MongoDB is not connected
 declare global {
