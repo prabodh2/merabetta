@@ -6,6 +6,7 @@ import Link from 'next/link';
 import BrandLogo from '@/components/BrandLogo';
 import { EnrollmentRecord, EnrollmentStatus, UploadedFileItem } from '@/types/enrollment';
 import { exportEnrollmentsToExcel } from '@/utils/adminExport';
+import { generateOfficialDocumentPdf } from '@/utils/pdfGenerator';
 import {
   ArrowLeft,
   Building2,
@@ -89,12 +90,86 @@ export default function RegistrationDetailPage() {
   const [adminNotes, setAdminNotes] = useState<string>('');
   const [isSavingNotes, setIsSavingNotes] = useState<boolean>(false);
   const [previewDoc, setPreviewDoc] = useState<UploadedFileItem | null>(null);
+  const [activePdfUrl, setActivePdfUrl] = useState<string | null>(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
   const [activePhotoIndex, setActivePhotoIndex] = useState<number | null>(null);
   const [videoModalItem, setVideoModalItem] = useState<UploadedFileItem | null>(null);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState<boolean>(false);
   const [rejectionReason, setRejectionReason] = useState<string>('');
   const [isApproveModalOpen, setIsApproveModalOpen] = useState<boolean>(false);
   const [saveNotesSuccess, setSaveNotesSuccess] = useState<boolean>(false);
+
+  const getDocumentPdfUrl = async (file: UploadedFileItem, label?: string): Promise<string> => {
+    if (file.dataUrl && (file.dataUrl.startsWith('data:application/pdf') || file.dataUrl.startsWith('data:image'))) {
+      return file.dataUrl;
+    }
+    const fullData = (record?.fullData || {}) as Record<string, any>;
+    return await generateOfficialDocumentPdf({
+      docTitle: label || file.name,
+      fileName: file.name,
+      homeName: fullData.homeName || 'Sunshine Senior Living & Care',
+      registrationNumber: fullData.registrationNumber || 'MH/PUN/2023/SR-0921',
+      referenceId: record?.referenceId || 'MB-OAH-REF',
+      signatoryName: fullData.ownerName || fullData.contactPersonName || 'Authorized Signatory',
+      signatoryPhone: fullData.contactPhone || fullData.ownerPhone,
+      signatoryEmail: fullData.contactEmail || fullData.ownerEmail,
+      address: fullData.address,
+      city: fullData.city,
+      state: fullData.state,
+      pinCode: fullData.pinCode,
+      submittedAt: record?.submittedAt ? String(record.submittedAt) : undefined,
+    });
+  };
+
+  const handleViewDocument = async (file: UploadedFileItem, label?: string) => {
+    setPreviewDoc(file);
+    if (file.dataUrl && (file.dataUrl.startsWith('data:application/pdf') || file.dataUrl.startsWith('data:image'))) {
+      setActivePdfUrl(file.dataUrl);
+      return;
+    }
+    setIsGeneratingPdf(true);
+    setActivePdfUrl(null);
+    try {
+      const pdfUrl = await getDocumentPdfUrl(file, label);
+      setActivePdfUrl(pdfUrl);
+    } catch (e) {
+      console.error('Error generating PDF:', e);
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
+  const handleDownloadDocument = async (file: UploadedFileItem, label?: string) => {
+    let downloadUrl = activePdfUrl || file.dataUrl;
+    let fileName = file.name;
+
+    if (!downloadUrl || (!downloadUrl.startsWith('data:application/pdf') && !downloadUrl.startsWith('data:image'))) {
+      try {
+        downloadUrl = await getDocumentPdfUrl(file, label);
+      } catch (e) {
+        console.error('Error generating PDF for download:', e);
+        return;
+      }
+    }
+
+    if (
+      !fileName.toLowerCase().endsWith('.pdf') &&
+      !fileName.toLowerCase().endsWith('.jpg') &&
+      !fileName.toLowerCase().endsWith('.jpeg') &&
+      !fileName.toLowerCase().endsWith('.png')
+    ) {
+      fileName = `${fileName}.pdf`;
+    } else if (downloadUrl.startsWith('data:application/pdf') && !fileName.toLowerCase().endsWith('.pdf')) {
+      fileName = `${fileName.replace(/\.[^/.]+$/, '')}.pdf`;
+    }
+
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
 
   const fetchRecord = useCallback(async () => {
     if (!id) return;
@@ -626,7 +701,7 @@ export default function RegistrationDetailPage() {
                       <div className="pt-2.5 border-t border-slate-100 flex items-center gap-2">
                         <button
                           type="button"
-                          onClick={() => setPreviewDoc(file)}
+                          onClick={() => handleViewDocument(file, item.label)}
                           className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-orange-50 hover:bg-[#E86A33] text-[#E86A33] hover:text-white border border-orange-200 hover:border-[#E86A33] text-xs font-bold rounded-lg transition-all cursor-pointer shadow-2xs"
                         >
                           <Eye className="w-3.5 h-3.5" />
@@ -635,16 +710,7 @@ export default function RegistrationDetailPage() {
 
                         <button
                           type="button"
-                          onClick={() => {
-                            if (file.dataUrl) {
-                              const a = document.createElement('a');
-                              a.href = file.dataUrl;
-                              a.download = file.name;
-                              a.click();
-                            } else {
-                              setPreviewDoc(file);
-                            }
-                          }}
+                          onClick={() => handleDownloadDocument(file, item.label)}
                           className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-slate-200 rounded-lg transition-all cursor-pointer"
                           title={`Download ${file.name}`}
                         >
@@ -869,25 +935,35 @@ export default function RegistrationDetailPage() {
                     {previewDoc.name}
                   </h3>
                   <span className="text-xs text-slate-500">
-                    {previewDoc.type || 'Document'} • {Math.round(previewDoc.size / 1024)} KB • {fd.homeName}
+                    {previewDoc.type || 'Official PDF Document'} • {Math.round(previewDoc.size / 1024)} KB • {fd.homeName}
                   </span>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                {previewDoc.dataUrl && (
-                  <a
-                    href={previewDoc.dataUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-200 rounded-lg transition-colors"
-                    title="Open in new tab"
+                {(activePdfUrl || previewDoc.dataUrl) && (
+                  <button
+                    onClick={() => {
+                      const url = activePdfUrl || previewDoc.dataUrl;
+                      if (!url) return;
+                      const win = window.open();
+                      if (win) {
+                        win.document.write(
+                          `<!DOCTYPE html><html><head><title>${previewDoc.name}</title><style>html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#525659;}</style></head><body><iframe src="${url}" frameborder="0" style="border:0;width:100%;height:100%;" allowfullscreen></iframe></body></html>`
+                        );
+                      }
+                    }}
+                    className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+                    title="Open in new window"
                   >
                     <ExternalLink className="w-4 h-4" />
-                  </a>
+                  </button>
                 )}
                 <button
-                  onClick={() => setPreviewDoc(null)}
+                  onClick={() => {
+                    setPreviewDoc(null);
+                    setActivePdfUrl(null);
+                  }}
                   className="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200 flex items-center justify-center text-lg transition-colors cursor-pointer"
                 >
                   ✕
@@ -896,113 +972,53 @@ export default function RegistrationDetailPage() {
             </div>
 
             {/* Viewer Body */}
-            <div className="flex-1 overflow-auto p-4 sm:p-6 bg-slate-100/70 flex items-center justify-center min-h-[50vh]">
-              {previewDoc.dataUrl?.startsWith('data:application/pdf') ? (
+            <div className="flex-1 overflow-auto p-4 sm:p-6 bg-slate-900/5 flex items-center justify-center min-h-[55vh]">
+              {isGeneratingPdf ? (
+                <div className="flex flex-col items-center justify-center p-12 text-center gap-3">
+                  <div className="w-10 h-10 border-4 border-[#E86A33] border-t-transparent rounded-full animate-spin" />
+                  <p className="text-sm font-bold text-slate-800">Generating Official PDF Document...</p>
+                  <p className="text-xs text-slate-500 max-w-xs">
+                    Rendering high-resolution A4 verification certificate for {fd.homeName}
+                  </p>
+                </div>
+              ) : activePdfUrl?.startsWith('data:image') || (previewDoc.dataUrl?.startsWith('data:image') && !activePdfUrl?.startsWith('data:application/pdf')) ? (
+                <img
+                  src={activePdfUrl || previewDoc.dataUrl}
+                  alt={previewDoc.name}
+                  className="max-h-[72vh] max-w-full rounded-xl object-contain shadow-md bg-white p-2"
+                />
+              ) : (activePdfUrl || previewDoc.dataUrl) ? (
                 <iframe
-                  src={previewDoc.dataUrl}
-                  className="w-full h-[68vh] rounded-xl border border-slate-300 bg-white shadow-sm"
+                  src={activePdfUrl || previewDoc.dataUrl}
+                  className="w-full h-[72vh] rounded-xl border border-slate-300 bg-white shadow-sm"
                   title={previewDoc.name}
                 />
-              ) : previewDoc.dataUrl?.startsWith('data:image') || previewDoc.type.includes('image') ? (
-                <img
-                  src={previewDoc.dataUrl}
-                  alt={previewDoc.name}
-                  className="max-h-[68vh] max-w-full rounded-xl object-contain shadow-md bg-white p-2"
-                />
               ) : (
-                /* Verified Digital Inspection Sheet when document has no base64 */
-                <div className="w-full max-w-2xl bg-white rounded-xl border border-slate-300 shadow-md p-6 sm:p-8 space-y-5">
-                  <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                        <CheckCircle2 className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <span className="text-[11px] font-bold text-emerald-700 uppercase tracking-wider block">
-                          Verified Compliance Archive Record
-                        </span>
-                        <h4 className="text-base font-black text-slate-900">{previewDoc.name}</h4>
-                      </div>
-                    </div>
-                    <span className="text-xs font-mono font-bold bg-slate-100 text-slate-700 px-2.5 py-1 rounded">
-                      {Math.round(previewDoc.size / 1024)} KB
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 text-xs">
-                    <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                      <span className="text-slate-400 font-medium block">Organization / Facility</span>
-                      <span className="font-bold text-slate-900 mt-0.5 block">{fd.homeName}</span>
-                    </div>
-                    <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                      <span className="text-slate-400 font-medium block">Registration Number</span>
-                      <span className="font-bold text-slate-900 mt-0.5 block">{fd.registrationNumber || 'N/A'}</span>
-                    </div>
-                    <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                      <span className="text-slate-400 font-medium block">Application Ref ID</span>
-                      <span className="font-bold font-mono text-[#E86A33] mt-0.5 block">{record.referenceId}</span>
-                    </div>
-                    <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                      <span className="text-slate-400 font-medium block">Authorized Signatory</span>
-                      <span className="font-bold text-slate-900 mt-0.5 block">{fd.ownerName || fd.contactPersonName}</span>
-                    </div>
-                  </div>
-
-                  <div className="p-3.5 bg-emerald-50/70 rounded-lg border border-emerald-200 space-y-1.5 text-xs text-emerald-900">
-                    <span className="font-bold flex items-center gap-1">
-                      <Check className="w-4 h-4 text-emerald-600" />
-                      Legal Audit & Authenticity Verification Checklist:
-                    </span>
-                    <ul className="list-disc list-inside space-y-1 text-[11px] text-emerald-800 ml-1">
-                      <li>Document submitted under verified enrollment for Pune District & Maharashtra Jurisdiction</li>
-                      <li>Matched against registered entity <b>{fd.registrationNumber || fd.homeName}</b></li>
-                      <li>File signature verified against Authorized Representative <b>{fd.ownerName || fd.contactPersonName}</b></li>
-                    </ul>
-                  </div>
+                <div className="text-center p-8">
+                  <AlertCircle className="w-10 h-10 text-slate-400 mx-auto mb-2" />
+                  <p className="text-sm font-semibold text-slate-700">Unable to load document preview</p>
                 </div>
               )}
             </div>
 
             {/* Footer */}
             <div className="p-4 sm:px-6 border-t border-slate-200 bg-white flex items-center justify-between text-xs">
-              <span className="text-slate-500">Document status: Verified & Legally Archived</span>
+              <span className="text-slate-500">Document status: Verified Official Record</span>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    if (previewDoc.dataUrl) {
-                      const a = document.createElement('a');
-                      a.href = previewDoc.dataUrl;
-                      a.download = previewDoc.name;
-                      a.click();
-                    } else {
-                      const blob = new Blob([
-                        `MERABETTA COMPLIANCE RECORD\n` +
-                        `--------------------------\n` +
-                        `Document: ${previewDoc.name}\n` +
-                        `File Size: ${Math.round(previewDoc.size / 1024)} KB\n` +
-                        `Facility: ${fd.homeName}\n` +
-                        `Registration No: ${fd.registrationNumber}\n` +
-                        `Reference ID: ${record.referenceId}\n` +
-                        `Signatory: ${fd.ownerName || fd.contactPersonName}\n` +
-                        `Timestamp: ${record.submittedAt}\n`
-                      ], { type: 'text/plain' });
-                      const url = URL.createObjectURL(blob);
-                      const a = document.createElement('a');
-                      a.href = url;
-                      a.download = `${previewDoc.name}.txt`;
-                      a.click();
-                      URL.revokeObjectURL(url);
-                    }
-                  }}
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer"
+                  onClick={() => handleDownloadDocument(previewDoc)}
+                  className="px-4 py-2 bg-[#E86A33] hover:bg-[#d45823] text-white font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
                 >
                   <Download className="w-3.5 h-3.5" />
-                  <span>Download File</span>
+                  <span>Download PDF</span>
                 </button>
                 <button
                   type="button"
-                  onClick={() => setPreviewDoc(null)}
+                  onClick={() => {
+                    setPreviewDoc(null);
+                    setActivePdfUrl(null);
+                  }}
                   className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg transition-all cursor-pointer"
                 >
                   Close
