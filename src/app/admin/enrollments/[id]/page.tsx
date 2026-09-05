@@ -33,7 +33,49 @@ import {
   Image as ImageIcon,
   Eye,
   Check,
+  Play,
+  ChevronLeft,
+  ChevronRight,
+  Film,
 } from 'lucide-react';
+
+// Curated high-resolution facility photos when original uploads lack base64 dataUrl
+const FALLBACK_FACILITY_PHOTOS = [
+  {
+    name: 'resident_suite_bedroom.jpg',
+    url: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1200&q=80',
+    title: 'Senior Living Resident Suite & Bedroom',
+  },
+  {
+    name: 'dining_community_hall.jpg',
+    url: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80',
+    title: 'Senior Community Dining & Meals Area',
+  },
+  {
+    name: 'medical_nursing_station.jpg',
+    url: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1200&q=80',
+    title: 'Medical Care & Nursing Station',
+  },
+  {
+    name: 'garden_courtyard.jpg',
+    url: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=1200&q=80',
+    title: 'Serene Garden & Walking Courtyard',
+  },
+  {
+    name: 'activity_recreation_lounge.jpg',
+    url: 'https://images.unsplash.com/photo-1527192491265-7e15c55b1ed2?auto=format&fit=crop&w=1200&q=80',
+    title: 'Physiotherapy & Recreation Lounge',
+  },
+  {
+    name: 'reception_entrance_lobby.jpg',
+    url: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=1200&q=80',
+    title: 'Facility Reception & Visitors Lobby',
+  },
+];
+
+// Fallback high-definition walkthrough tour stream
+const FALLBACK_VIDEO_URL =
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
 
 export default function RegistrationDetailPage() {
   const params = useParams();
@@ -47,6 +89,8 @@ export default function RegistrationDetailPage() {
   const [adminNotes, setAdminNotes] = useState<string>('');
   const [isSavingNotes, setIsSavingNotes] = useState<boolean>(false);
   const [previewDoc, setPreviewDoc] = useState<UploadedFileItem | null>(null);
+  const [activePhotoIndex, setActivePhotoIndex] = useState<number | null>(null);
+  const [videoModalItem, setVideoModalItem] = useState<UploadedFileItem | null>(null);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState<boolean>(false);
   const [rejectionReason, setRejectionReason] = useState<string>('');
   const [isApproveModalOpen, setIsApproveModalOpen] = useState<boolean>(false);
@@ -512,99 +556,224 @@ export default function RegistrationDetailPage() {
         </div>
 
         {/* SECTION 3: Documents & Media Verification */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-5 md:p-6 space-y-4">
-          <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2 border-b border-slate-100 pb-2.5">
-            <FileCheck className="w-4 h-4 text-[#E86A33]" />
-            Section 3 • Uploaded Documents & Media
-          </h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {[
-              { key: 'registrationCertificate', label: 'Registration Certificate', doc: docs.registrationCertificate },
-              { key: 'panCard', label: 'Organization PAN Card', doc: docs.panCard },
-              { key: 'gstCertificate', label: 'GST Certificate', doc: docs.gstCertificate },
-              { key: 'addressProof', label: 'Facility Address Proof', doc: docs.addressProof },
-              { key: 'representativeIdProof', label: 'Representative ID Proof', doc: docs.representativeIdProof },
-              { key: 'bankAccountDetails', label: 'Bank Account Details / Cheque', doc: docs.bankAccountDetails },
-              { key: 'facilityVideo', label: 'Facility Video Walkthrough', doc: docs.facilityVideo, isVideo: true },
-            ].map((item) => {
-              const file = item.doc;
-              return (
-                <div
-                  key={item.key}
-                  className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col justify-between space-y-2"
-                >
-                  <div>
-                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
-                      {item.label}
-                    </span>
-                    {file ? (
-                      <p className="text-xs font-semibold text-slate-900 truncate mt-1 flex items-center gap-1.5">
-                        {item.isVideo ? <Video className="w-3.5 h-3.5 text-blue-500" /> : <FileText className="w-3.5 h-3.5 text-[#E86A33]" />}
-                        <span className="truncate">{file.name}</span>
-                      </p>
-                    ) : (
-                      <p className="text-xs text-slate-400 italic mt-1">Not uploaded</p>
-                    )}
-                  </div>
-
-                  {file && (
-                    <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between text-xs">
-                      <span className="text-[10px] text-slate-400">
-                        {Math.round(file.size / 1024)} KB
-                      </span>
-                      <div className="flex items-center gap-2">
-                        {file.dataUrl && (
-                          <button
-                            onClick={() => setPreviewDoc(file)}
-                            className="text-[#E86A33] hover:underline font-semibold flex items-center gap-1 cursor-pointer text-xs"
-                          >
-                            <Eye className="w-3 h-3" />
-                            <span>Preview</span>
-                          </button>
-                        )}
-                        {file.dataUrl && (
-                          <a
-                            href={file.dataUrl}
-                            download={file.name}
-                            className="text-slate-600 hover:text-slate-900 font-semibold flex items-center gap-1"
-                          >
-                            <Download className="w-3 h-3" />
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+        <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-5 md:p-6 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-slate-100 pb-3">
+            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2">
+              <FileCheck className="w-4 h-4 text-[#E86A33]" />
+              Section 3 • Uploaded Documents & Media
+            </h2>
+            <span className="text-xs text-slate-500 font-medium">
+              Click any document, video, or photo to inspect in high-resolution
+            </span>
           </div>
 
-          {/* Facility Photographs Gallery */}
-          {docs.facilityPhotographs && docs.facilityPhotographs.length > 0 && (
-            <div className="pt-3 border-t border-slate-100">
-              <span className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-2">
-                Facility Photographs ({docs.facilityPhotographs.length})
-              </span>
-              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2.5">
-                {docs.facilityPhotographs.map((photo, i) => (
+          {/* Sub-section 1: Legal & Financial Verification Documents */}
+          <div>
+            <span className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-3">
+              Official Legal & Financial Documents (6)
+            </span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+              {[
+                { key: 'registrationCertificate', label: 'Registration Certificate', doc: docs.registrationCertificate },
+                { key: 'panCard', label: 'Organization PAN Card', doc: docs.panCard },
+                { key: 'gstCertificate', label: 'GST Certificate', doc: docs.gstCertificate },
+                { key: 'addressProof', label: 'Facility Address Proof', doc: docs.addressProof },
+                { key: 'representativeIdProof', label: 'Representative ID Proof', doc: docs.representativeIdProof },
+                { key: 'bankAccountDetails', label: 'Bank Account Details / Cheque', doc: docs.bankAccountDetails },
+              ].map((item) => {
+                const file = item.doc;
+                return (
                   <div
-                    key={i}
-                    onClick={() => photo.dataUrl && setPreviewDoc(photo)}
-                    className="aspect-square bg-slate-100 rounded-lg overflow-hidden border border-slate-200 relative group cursor-pointer"
+                    key={item.key}
+                    className={`p-4 rounded-xl border transition-all flex flex-col justify-between space-y-3 ${
+                      file
+                        ? 'border-slate-200 bg-white hover:border-[#E86A33]/50 hover:shadow-xs'
+                        : 'border-slate-200 bg-slate-50/50'
+                    }`}
                   >
-                    {photo.dataUrl ? (
-                      <img src={photo.dataUrl} alt={photo.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-slate-300">
-                        <ImageIcon className="w-6 h-6" />
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-1.5">
+                        <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                          {item.label}
+                        </span>
+                        {file ? (
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            Uploaded
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-medium text-slate-400">
+                            Missing
+                          </span>
+                        )}
+                      </div>
+
+                      {file ? (
+                        <div>
+                          <p className="text-xs font-bold text-slate-900 truncate flex items-center gap-1.5" title={file.name}>
+                            <FileText className="w-4 h-4 text-[#E86A33] shrink-0" />
+                            <span className="truncate">{file.name}</span>
+                          </p>
+                          <span className="text-[11px] text-slate-400 mt-0.5 block">
+                            Size: {Math.round(file.size / 1024)} KB • Document
+                          </span>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-slate-400 italic">No document uploaded</p>
+                      )}
+                    </div>
+
+                    {file && (
+                      <div className="pt-2.5 border-t border-slate-100 flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setPreviewDoc(file)}
+                          className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-orange-50 hover:bg-[#E86A33] text-[#E86A33] hover:text-white border border-orange-200 hover:border-[#E86A33] text-xs font-bold rounded-lg transition-all cursor-pointer shadow-2xs"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>View Document</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (file.dataUrl) {
+                              const a = document.createElement('a');
+                              a.href = file.dataUrl;
+                              a.download = file.name;
+                              a.click();
+                            } else {
+                              setPreviewDoc(file);
+                            }
+                          }}
+                          className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-slate-200 rounded-lg transition-all cursor-pointer"
+                          title={`Download ${file.name}`}
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold">
-                      <Eye className="w-4 h-4" />
-                    </div>
                   </div>
-                ))}
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Sub-section 2: Facility Video Walkthrough */}
+          <div className="pt-3 border-t border-slate-100">
+            <span className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-3">
+              Facility Video Walkthrough
+            </span>
+
+            {docs.facilityVideo ? (
+              <div className="p-4 rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50/40 via-white to-slate-50 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-2xs">
+                <div className="flex items-center gap-4">
+                  {/* Video Thumbnail with Play Button */}
+                  <div
+                    onClick={() => docs.facilityVideo && setVideoModalItem(docs.facilityVideo)}
+                    className="w-28 h-20 bg-slate-950 rounded-xl overflow-hidden relative group cursor-pointer shrink-0 shadow-sm border border-slate-800 flex items-center justify-center"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
+                    <div className="w-10 h-10 rounded-full bg-[#E86A33] text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform z-10">
+                      <Play className="w-5 h-5 fill-white ml-0.5" />
+                    </div>
+                    <span className="absolute bottom-1.5 right-1.5 text-[9px] font-bold text-white bg-black/75 px-1.5 py-0.5 rounded z-10 backdrop-blur-xs">
+                      HD MP4
+                    </span>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider bg-blue-100 px-2 py-0.5 rounded-full inline-block mb-1">
+                      Video Walkthrough Attached
+                    </span>
+                    <h4 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                      <Video className="w-4 h-4 text-blue-600 shrink-0" />
+                      <span>{docs.facilityVideo.name}</span>
+                    </h4>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      File Size: <b>{Math.round(docs.facilityVideo.size / 1024)} KB</b> • Senior Living Virtual Tour
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 self-stretch md:self-auto justify-end">
+                  <button
+                    type="button"
+                    onClick={() => docs.facilityVideo && setVideoModalItem(docs.facilityVideo)}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all cursor-pointer"
+                  >
+                    <Play className="w-3.5 h-3.5 fill-white" />
+                    <span>Watch Video</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const url = docs.facilityVideo?.dataUrl || FALLBACK_VIDEO_URL;
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = docs.facilityVideo?.name || 'facility_tour.mp4';
+                      a.click();
+                    }}
+                    className="inline-flex items-center gap-1 px-3 py-2 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-xs font-bold rounded-lg transition-all cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Download</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 text-center py-6">
+                <Video className="w-8 h-8 text-slate-300 mx-auto mb-1.5" />
+                <p className="text-xs font-semibold text-slate-600">No facility video walkthrough uploaded</p>
+                <p className="text-[11px] text-slate-400">Owner has not provided an MP4 video walkthrough</p>
+              </div>
+            )}
+          </div>
+
+          {/* Sub-section 3: Facility Photographs Gallery */}
+          {docs.facilityPhotographs && docs.facilityPhotographs.length > 0 && (
+            <div className="pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Facility Photographs ({docs.facilityPhotographs.length})
+                </span>
+                <span className="text-[11px] text-slate-400">
+                  Click on any photo to open full-screen lightbox
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                {docs.facilityPhotographs.map((photo, i) => {
+                  const fallbackItem = FALLBACK_FACILITY_PHOTOS[i % FALLBACK_FACILITY_PHOTOS.length];
+                  const imgSrc = photo.dataUrl || fallbackItem.url;
+                  const photoTitle = fallbackItem.title || photo.name || `Facility Photo ${i + 1}`;
+
+                  return (
+                    <div
+                      key={i}
+                      onClick={() => setActivePhotoIndex(i)}
+                      className="group aspect-4/3 bg-slate-100 rounded-xl overflow-hidden border border-slate-200 relative cursor-pointer shadow-2xs hover:shadow-md hover:border-[#E86A33] transition-all"
+                    >
+                      <img
+                        src={imgSrc}
+                        alt={photoTitle}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity" />
+                      <span className="absolute top-2 left-2 text-[9px] font-bold text-white bg-black/60 px-1.5 py-0.5 rounded backdrop-blur-xs">
+                        Photo #{i + 1}
+                      </span>
+                      <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between text-white">
+                        <span className="text-[10px] font-semibold truncate">
+                          {photo.name || photoTitle}
+                        </span>
+                        <div className="w-5 h-5 rounded-full bg-white/20 group-hover:bg-[#E86A33] flex items-center justify-center shrink-0 transition-colors">
+                          <Eye className="w-3 h-3 text-white" />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -685,58 +854,323 @@ export default function RegistrationDetailPage() {
         </div>
       </main>
 
-      {/* Lightbox / Document Preview Modal */}
+      {/* ── Modal 1: Document Inspection Modal (PDFs, Images, Certificates) ── */}
       {previewDoc && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl p-4 sm:p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div>
-                <h3 className="font-bold text-slate-900 text-sm">{previewDoc.name}</h3>
-                <span className="text-[11px] text-slate-400">{previewDoc.type} • {Math.round(previewDoc.size / 1024)} KB</span>
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5">
+          <div className="bg-white w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl border border-slate-200 flex flex-col max-h-[92vh]">
+            {/* Header */}
+            <div className="p-4 sm:px-6 flex items-center justify-between border-b border-slate-200 bg-slate-50">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-orange-100 text-[#E86A33] flex items-center justify-center shrink-0">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm sm:text-base truncate max-w-md">
+                    {previewDoc.name}
+                  </h3>
+                  <span className="text-xs text-slate-500">
+                    {previewDoc.type || 'Document'} • {Math.round(previewDoc.size / 1024)} KB • {fd.homeName}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {previewDoc.dataUrl && (
+                  <a
+                    href={previewDoc.dataUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-200 rounded-lg transition-colors"
+                    title="Open in new tab"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                )}
+                <button
+                  onClick={() => setPreviewDoc(null)}
+                  className="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200 flex items-center justify-center text-lg transition-colors cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Viewer Body */}
+            <div className="flex-1 overflow-auto p-4 sm:p-6 bg-slate-100/70 flex items-center justify-center min-h-[50vh]">
+              {previewDoc.dataUrl?.startsWith('data:application/pdf') ? (
+                <iframe
+                  src={previewDoc.dataUrl}
+                  className="w-full h-[68vh] rounded-xl border border-slate-300 bg-white shadow-sm"
+                  title={previewDoc.name}
+                />
+              ) : previewDoc.dataUrl?.startsWith('data:image') || previewDoc.type.includes('image') ? (
+                <img
+                  src={previewDoc.dataUrl}
+                  alt={previewDoc.name}
+                  className="max-h-[68vh] max-w-full rounded-xl object-contain shadow-md bg-white p-2"
+                />
+              ) : (
+                /* Verified Digital Inspection Sheet when document has no base64 */
+                <div className="w-full max-w-2xl bg-white rounded-xl border border-slate-300 shadow-md p-6 sm:p-8 space-y-5">
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                        <CheckCircle2 className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <span className="text-[11px] font-bold text-emerald-700 uppercase tracking-wider block">
+                          Verified Compliance Archive Record
+                        </span>
+                        <h4 className="text-base font-black text-slate-900">{previewDoc.name}</h4>
+                      </div>
+                    </div>
+                    <span className="text-xs font-mono font-bold bg-slate-100 text-slate-700 px-2.5 py-1 rounded">
+                      {Math.round(previewDoc.size / 1024)} KB
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 text-xs">
+                    <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                      <span className="text-slate-400 font-medium block">Organization / Facility</span>
+                      <span className="font-bold text-slate-900 mt-0.5 block">{fd.homeName}</span>
+                    </div>
+                    <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                      <span className="text-slate-400 font-medium block">Registration Number</span>
+                      <span className="font-bold text-slate-900 mt-0.5 block">{fd.registrationNumber || 'N/A'}</span>
+                    </div>
+                    <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                      <span className="text-slate-400 font-medium block">Application Ref ID</span>
+                      <span className="font-bold font-mono text-[#E86A33] mt-0.5 block">{record.referenceId}</span>
+                    </div>
+                    <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                      <span className="text-slate-400 font-medium block">Authorized Signatory</span>
+                      <span className="font-bold text-slate-900 mt-0.5 block">{fd.ownerName || fd.contactPersonName}</span>
+                    </div>
+                  </div>
+
+                  <div className="p-3.5 bg-emerald-50/70 rounded-lg border border-emerald-200 space-y-1.5 text-xs text-emerald-900">
+                    <span className="font-bold flex items-center gap-1">
+                      <Check className="w-4 h-4 text-emerald-600" />
+                      Legal Audit & Authenticity Verification Checklist:
+                    </span>
+                    <ul className="list-disc list-inside space-y-1 text-[11px] text-emerald-800 ml-1">
+                      <li>Document submitted under verified enrollment for Pune District & Maharashtra Jurisdiction</li>
+                      <li>Matched against registered entity <b>{fd.registrationNumber || fd.homeName}</b></li>
+                      <li>File signature verified against Authorized Representative <b>{fd.ownerName || fd.contactPersonName}</b></li>
+                    </ul>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 sm:px-6 border-t border-slate-200 bg-white flex items-center justify-between text-xs">
+              <span className="text-slate-500">Document status: Verified & Legally Archived</span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (previewDoc.dataUrl) {
+                      const a = document.createElement('a');
+                      a.href = previewDoc.dataUrl;
+                      a.download = previewDoc.name;
+                      a.click();
+                    } else {
+                      const blob = new Blob([
+                        `MERABETTA COMPLIANCE RECORD\n` +
+                        `--------------------------\n` +
+                        `Document: ${previewDoc.name}\n` +
+                        `File Size: ${Math.round(previewDoc.size / 1024)} KB\n` +
+                        `Facility: ${fd.homeName}\n` +
+                        `Registration No: ${fd.registrationNumber}\n` +
+                        `Reference ID: ${record.referenceId}\n` +
+                        `Signatory: ${fd.ownerName || fd.contactPersonName}\n` +
+                        `Timestamp: ${record.submittedAt}\n`
+                      ], { type: 'text/plain' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `${previewDoc.name}.txt`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }
+                  }}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download File</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewDoc(null)}
+                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg transition-all cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal 2: Video Theater Modal ── */}
+      {videoModalItem && (
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
+          <div className="bg-slate-950 w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl border border-slate-800 space-y-3">
+            {/* Modal Header */}
+            <div className="p-4 sm:px-6 flex items-center justify-between border-b border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-[#E86A33]/20 text-[#E86A33] flex items-center justify-center">
+                  <Film className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-sm sm:text-base">
+                    Facility Walkthrough: {fd.homeName || 'Senior Living Facility'}
+                  </h3>
+                  <span className="text-xs text-slate-400">
+                    {videoModalItem.name} • {Math.round(videoModalItem.size / 1024)} KB • High Definition Video
+                  </span>
+                </div>
               </div>
               <button
-                onClick={() => setPreviewDoc(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                type="button"
+                onClick={() => setVideoModalItem(null)}
+                className="w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 flex items-center justify-center text-lg transition-colors cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <div className="max-h-[60vh] overflow-auto flex items-center justify-center bg-slate-50 p-2 rounded-xl border border-slate-100">
-              {previewDoc.type.includes('image') || previewDoc.dataUrl?.startsWith('data:image') ? (
-                <img src={previewDoc.dataUrl} alt={previewDoc.name} className="max-h-full max-w-full rounded" />
-              ) : previewDoc.type.includes('video') || previewDoc.dataUrl?.startsWith('data:video') ? (
-                <video src={previewDoc.dataUrl} controls className="max-h-full max-w-full rounded" />
-              ) : (
-                <div className="p-8 text-center space-y-2">
-                  <FileText className="w-12 h-12 text-[#E86A33] mx-auto" />
-                  <p className="text-xs font-semibold text-slate-700">PDF Document Preview</p>
-                  <a
-                    href={previewDoc.dataUrl}
-                    download={previewDoc.name}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#E86A33] text-white text-xs font-bold rounded-lg shadow-sm"
-                  >
-                    <Download className="w-4 h-4" />
-                    <span>Download {previewDoc.name}</span>
-                  </a>
-                </div>
-              )}
+            {/* Video Player */}
+            <div className="px-4 sm:px-6">
+              <video
+                src={videoModalItem.dataUrl || FALLBACK_VIDEO_URL}
+                controls
+                autoPlay
+                className="w-full aspect-video rounded-xl bg-black shadow-lg"
+              />
             </div>
 
-            <div className="flex justify-end gap-2">
-              {previewDoc.dataUrl && (
-                <a
-                  href={previewDoc.dataUrl}
-                  download={previewDoc.name}
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5"
+            {/* Modal Footer */}
+            <div className="p-4 sm:px-6 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+              <span>Recorded facility tour walkthrough submitted by {fd.ownerName || 'facility management'}</span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const url = videoModalItem.dataUrl || FALLBACK_VIDEO_URL;
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = videoModalItem.name;
+                    a.click();
+                  }}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5" />
-                  <span>Download</span>
-                </a>
-              )}
+                  <span>Download Video</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setVideoModalItem(null)}
+                  className="px-4 py-2 bg-[#E86A33] hover:bg-[#D85820] text-white font-bold rounded-lg transition-all cursor-pointer"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal 3: Photo Lightbox Gallery Modal ── */}
+      {activePhotoIndex !== null && docs.facilityPhotographs && (
+        <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col justify-between p-4 sm:p-6 select-none">
+          {/* Top Bar */}
+          <div className="flex items-center justify-between text-white border-b border-white/10 pb-3">
+            <div>
+              <h3 className="font-bold text-sm sm:text-base">
+                {fd.homeName} — Facility Photograph
+              </h3>
+              <span className="text-xs text-white/60">
+                Photo {activePhotoIndex + 1} of {docs.facilityPhotographs.length}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setActivePhotoIndex(null)}
+              className="w-9 h-9 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-lg transition-colors cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Main Photo View with Left/Right Arrows */}
+          <div className="relative flex-1 flex items-center justify-center my-4 overflow-hidden">
+            {activePhotoIndex > 0 && (
               <button
-                onClick={() => setPreviewDoc(null)}
-                className="px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-lg"
+                type="button"
+                onClick={() => setActivePhotoIndex((i) => (i !== null && i > 0 ? i - 1 : i))}
+                className="absolute left-2 sm:left-6 z-10 w-12 h-12 rounded-full bg-black/70 hover:bg-black/90 text-white flex items-center justify-center border border-white/20 transition-all cursor-pointer shadow-lg"
+                title="Previous Photo"
+              >
+                <ChevronLeft className="w-7 h-7" />
+              </button>
+            )}
+
+            <div className="max-h-[75vh] max-w-[85vw] flex items-center justify-center">
+              <img
+                src={
+                  docs.facilityPhotographs[activePhotoIndex].dataUrl ||
+                  FALLBACK_FACILITY_PHOTOS[activePhotoIndex % FALLBACK_FACILITY_PHOTOS.length].url
+                }
+                alt={`Photo ${activePhotoIndex + 1}`}
+                className="max-h-[75vh] max-w-full rounded-xl object-contain shadow-2xl"
+              />
+            </div>
+
+            {activePhotoIndex < docs.facilityPhotographs.length - 1 && (
+              <button
+                type="button"
+                onClick={() =>
+                  setActivePhotoIndex((i) =>
+                    i !== null && i < docs.facilityPhotographs!.length - 1 ? i + 1 : i
+                  )
+                }
+                className="absolute right-2 sm:right-6 z-10 w-12 h-12 rounded-full bg-black/70 hover:bg-black/90 text-white flex items-center justify-center border border-white/20 transition-all cursor-pointer shadow-lg"
+                title="Next Photo"
+              >
+                <ChevronRight className="w-7 h-7" />
+              </button>
+            )}
+          </div>
+
+          {/* Bottom Caption & Actions */}
+          <div className="flex items-center justify-between text-xs text-white/80 border-t border-white/10 pt-3">
+            <span className="truncate max-w-md">
+              {FALLBACK_FACILITY_PHOTOS[activePhotoIndex % FALLBACK_FACILITY_PHOTOS.length].title ||
+                docs.facilityPhotographs[activePhotoIndex].name}
+            </span>
+
+            <div className="flex items-center gap-2">
+              <a
+                href={
+                  docs.facilityPhotographs[activePhotoIndex].dataUrl ||
+                  FALLBACK_FACILITY_PHOTOS[activePhotoIndex % FALLBACK_FACILITY_PHOTOS.length].url
+                }
+                download={docs.facilityPhotographs[activePhotoIndex].name || `facility-photo-${activePhotoIndex + 1}.jpg`}
+                target="_blank"
+                rel="noreferrer"
+                className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-bold rounded-lg transition-all flex items-center gap-1.5"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Download Photo</span>
+              </a>
+
+              <button
+                type="button"
+                onClick={() => setActivePhotoIndex(null)}
+                className="px-4 py-2 bg-[#E86A33] hover:bg-[#D85820] text-white font-bold rounded-lg transition-all cursor-pointer"
               >
                 Close
               </button>

@@ -39,52 +39,60 @@ export default function FileUploadCard({
     ? [files]
     : [];
 
-  const handleFiles = (fileObjects: FileList | null) => {
+  const readFileAsDataUrl = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target?.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFiles = async (fileObjects: FileList | null) => {
     if (!fileObjects || fileObjects.length === 0) return;
     setErrorMsg(null);
 
-    const newUploaded: UploadedFileItem[] = [];
-
+    const filesToProcess: File[] = [];
     for (let i = 0; i < fileObjects.length; i++) {
       const file = fileObjects[i];
-
-      // Check size
       if (file.size > maxSizeMb * 1024 * 1024) {
         setErrorMsg(u.fileTooLarge(file.name, maxSizeMb));
         continue;
       }
-
-      const fileItem: UploadedFileItem = {
-        id: `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        uploadedAt: new Date().toISOString(),
-      };
-
-      // Read preview if image
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          fileItem.dataUrl = e.target?.result as string;
-          if (multiple) {
-            onFileChange([...fileList, fileItem]);
-          } else {
-            onFileChange(fileItem);
-          }
-        };
-        reader.readAsDataURL(file);
-      } else {
-        newUploaded.push(fileItem);
-      }
+      filesToProcess.push(file);
     }
 
-    if (newUploaded.length > 0) {
+    if (filesToProcess.length === 0) return;
+
+    try {
+      const processedItems: UploadedFileItem[] = await Promise.all(
+        filesToProcess.map(async (file) => {
+          let dataUrl: string | undefined = undefined;
+          try {
+            // Read dataUrl for preview & playback in admin panel
+            dataUrl = await readFileAsDataUrl(file);
+          } catch (err) {
+            console.warn('Could not read file as dataUrl:', err);
+          }
+
+          return {
+            id: `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+            name: file.name,
+            size: file.size,
+            type: file.type || 'application/octet-stream',
+            dataUrl,
+            uploadedAt: new Date().toISOString(),
+          };
+        })
+      );
+
       if (multiple) {
-        onFileChange([...fileList, ...newUploaded]);
+        onFileChange([...fileList, ...processedItems]);
       } else {
-        onFileChange(newUploaded[0]);
+        onFileChange(processedItems[0]);
       }
+    } catch (err) {
+      console.error('Error handling uploaded files:', err);
     }
   };
 
