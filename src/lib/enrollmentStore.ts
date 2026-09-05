@@ -240,9 +240,10 @@ export async function getEnrollmentById(idOrRef: string): Promise<EnrollmentReco
 export async function updateEnrollmentStatus(
   idOrRef: string,
   updates: {
-    status: EnrollmentStatus;
+    status?: EnrollmentStatus;
     adminNotes?: string;
     reviewedBy?: string;
+    documents?: Record<string, unknown>;
   }
 ): Promise<EnrollmentRecord | null> {
   const collection = await getMongoCollection();
@@ -258,11 +259,14 @@ export async function updateEnrollmentStatus(
       }
 
       const updateFields: Record<string, unknown> = {
-        status: updates.status,
         reviewedAt,
       };
+      if (updates.status) updateFields.status = updates.status;
       if (updates.adminNotes !== undefined) updateFields.adminNotes = updates.adminNotes;
       if (updates.reviewedBy !== undefined) updateFields.reviewedBy = updates.reviewedBy;
+      if (updates.documents) {
+        updateFields['fullData.documents'] = updates.documents;
+      }
 
       await collection.updateOne(query, { $set: updateFields });
       return getEnrollmentById(idOrRef);
@@ -277,12 +281,17 @@ export async function updateEnrollmentStatus(
   );
 
   if (idx !== -1) {
+    const existingFullData = memoryStore[idx].fullData || ({} as any);
     memoryStore[idx] = {
       ...memoryStore[idx],
-      status: updates.status,
+      status: updates.status || memoryStore[idx].status,
       adminNotes: updates.adminNotes ?? memoryStore[idx].adminNotes,
       reviewedBy: updates.reviewedBy ?? memoryStore[idx].reviewedBy,
       reviewedAt,
+      fullData: {
+        ...existingFullData,
+        documents: (updates.documents as any) || existingFullData.documents,
+      },
     };
     return memoryStore[idx];
   }

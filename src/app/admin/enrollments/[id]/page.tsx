@@ -6,7 +6,6 @@ import Link from 'next/link';
 import BrandLogo from '@/components/BrandLogo';
 import { EnrollmentRecord, EnrollmentStatus, UploadedFileItem } from '@/types/enrollment';
 import { exportEnrollmentsToExcel } from '@/utils/adminExport';
-import { generateOfficialDocumentPdf } from '@/utils/pdfGenerator';
 import {
   ArrowLeft,
   Building2,
@@ -38,6 +37,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Film,
+  Upload,
 } from 'lucide-react';
 
 // Curated high-resolution facility photos when original uploads lack base64 dataUrl
@@ -90,8 +90,9 @@ export default function RegistrationDetailPage() {
   const [adminNotes, setAdminNotes] = useState<string>('');
   const [isSavingNotes, setIsSavingNotes] = useState<boolean>(false);
   const [previewDoc, setPreviewDoc] = useState<UploadedFileItem | null>(null);
+  const [previewDocKey, setPreviewDocKey] = useState<string | null>(null);
   const [activePdfUrl, setActivePdfUrl] = useState<string | null>(null);
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
+  const [isUploadingOriginal, setIsUploadingOriginal] = useState<boolean>(false);
   const [activePhotoIndex, setActivePhotoIndex] = useState<number | null>(null);
   const [videoModalItem, setVideoModalItem] = useState<UploadedFileItem | null>(null);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState<boolean>(false);
@@ -99,73 +100,77 @@ export default function RegistrationDetailPage() {
   const [isApproveModalOpen, setIsApproveModalOpen] = useState<boolean>(false);
   const [saveNotesSuccess, setSaveNotesSuccess] = useState<boolean>(false);
 
-  const getDocumentPdfUrl = async (file: UploadedFileItem, label?: string): Promise<string> => {
-    if (file.dataUrl && (file.dataUrl.startsWith('data:application/pdf') || file.dataUrl.startsWith('data:image'))) {
-      return file.dataUrl;
-    }
-    const fullData = (record?.fullData || {}) as Record<string, any>;
-    return await generateOfficialDocumentPdf({
-      docTitle: label || file.name,
-      fileName: file.name,
-      homeName: fullData.homeName || 'Sunshine Senior Living & Care',
-      registrationNumber: fullData.registrationNumber || 'MH/PUN/2023/SR-0921',
-      referenceId: record?.referenceId || 'MB-OAH-REF',
-      signatoryName: fullData.ownerName || fullData.contactPersonName || 'Authorized Signatory',
-      signatoryPhone: fullData.contactPhone || fullData.ownerPhone,
-      signatoryEmail: fullData.contactEmail || fullData.ownerEmail,
-      address: fullData.address,
-      city: fullData.city,
-      state: fullData.state,
-      pinCode: fullData.pinCode,
-      submittedAt: record?.submittedAt ? String(record.submittedAt) : undefined,
-    });
-  };
-
-  const handleViewDocument = async (file: UploadedFileItem, label?: string) => {
+  const handleViewDocument = (file: UploadedFileItem, docKey?: string) => {
     setPreviewDoc(file);
+    setPreviewDocKey(docKey || null);
     if (file.dataUrl && (file.dataUrl.startsWith('data:application/pdf') || file.dataUrl.startsWith('data:image'))) {
       setActivePdfUrl(file.dataUrl);
-      return;
-    }
-    setIsGeneratingPdf(true);
-    setActivePdfUrl(null);
-    try {
-      const pdfUrl = await getDocumentPdfUrl(file, label);
-      setActivePdfUrl(pdfUrl);
-    } catch (e) {
-      console.error('Error generating PDF:', e);
-    } finally {
-      setIsGeneratingPdf(false);
+    } else {
+      setActivePdfUrl(null);
     }
   };
 
-  const handleDownloadDocument = async (file: UploadedFileItem, label?: string) => {
-    let downloadUrl = activePdfUrl || file.dataUrl;
-    let fileName = file.name;
+  const handleAttachOriginalFile = async (docKey: string, fileObj: File) => {
+    if (!record || !docKey || !fileObj) return;
+    setIsUploadingOriginal(true);
+    try {
+      const reader = new FileReader();
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        reader.onload = (e) => resolve(e.target?.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(fileObj);
+      });
 
-    if (!downloadUrl || (!downloadUrl.startsWith('data:application/pdf') && !downloadUrl.startsWith('data:image'))) {
-      try {
-        downloadUrl = await getDocumentPdfUrl(file, label);
-      } catch (e) {
-        console.error('Error generating PDF for download:', e);
-        return;
+      const fullData = (record.fullData || {}) as Record<string, any>;
+      const currentDocs = (fullData.documents || {}) as Record<string, any>;
+      const existingItem = currentDocs[docKey] || {};
+
+      const updatedItem: UploadedFileItem = {
+        ...existingItem,
+        id: existingItem.id || `${Date.now()}`,
+        name: fileObj.name,
+        size: fileObj.size,
+        type: fileObj.type || 'application/pdf',
+        dataUrl,
+        uploadedAt: new Date().toISOString(),
+      };
+
+      const updatedDocs = {
+        ...currentDocs,
+        [docKey]: updatedItem,
+      };
+
+      const res = await fetch(`/api/admin/enrollments/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          documents: updatedDocs,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success && data.record) {
+        setRecord(data.record);
+        setPreviewDoc(updatedItem);
+        setActivePdfUrl(dataUrl);
       }
+    } catch (err) {
+      console.error('Failed to attach original file:', err);
+    } finally {
+      setIsUploadingOriginal(false);
     }
+  };
 
-    if (
-      !fileName.toLowerCase().endsWith('.pdf') &&
-      !fileName.toLowerCase().endsWith('.jpg') &&
-      !fileName.toLowerCase().endsWith('.jpeg') &&
-      !fileName.toLowerCase().endsWith('.png')
-    ) {
-      fileName = `${fileName}.pdf`;
-    } else if (downloadUrl.startsWith('data:application/pdf') && !fileName.toLowerCase().endsWith('.pdf')) {
-      fileName = `${fileName.replace(/\.[^/.]+$/, '')}.pdf`;
+  const handleDownloadDocument = (file: UploadedFileItem) => {
+    const downloadUrl = file.dataUrl || activePdfUrl;
+    if (!downloadUrl) {
+      alert('Original file content is not stored in the database for this record. Please use "Upload Original File" to attach it.');
+      return;
     }
 
     const a = document.createElement('a');
     a.href = downloadUrl;
-    a.download = fileName;
+    a.download = file.name;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -701,21 +706,39 @@ export default function RegistrationDetailPage() {
                       <div className="pt-2.5 border-t border-slate-100 flex items-center gap-2">
                         <button
                           type="button"
-                          onClick={() => handleViewDocument(file, item.label)}
+                          onClick={() => handleViewDocument(file, item.key)}
                           className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-orange-50 hover:bg-[#E86A33] text-[#E86A33] hover:text-white border border-orange-200 hover:border-[#E86A33] text-xs font-bold rounded-lg transition-all cursor-pointer shadow-2xs"
                         >
                           <Eye className="w-3.5 h-3.5" />
                           <span>View Document</span>
                         </button>
 
-                        <button
-                          type="button"
-                          onClick={() => handleDownloadDocument(file, item.label)}
-                          className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-slate-200 rounded-lg transition-all cursor-pointer"
-                          title={`Download ${file.name}`}
-                        >
-                          <Download className="w-3.5 h-3.5" />
-                        </button>
+                        {file.dataUrl ? (
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadDocument(file)}
+                            className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-slate-200 rounded-lg transition-all cursor-pointer"
+                            title={`Download ${file.name}`}
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                          </button>
+                        ) : (
+                          <label
+                            className="p-1.5 text-[#E86A33] hover:text-white hover:bg-[#E86A33] border border-orange-200 rounded-lg transition-all cursor-pointer"
+                            title="Upload original PDF to database"
+                          >
+                            <Upload className="w-3.5 h-3.5" />
+                            <input
+                              type="file"
+                              accept=".pdf,.png,.jpg,.jpeg"
+                              className="hidden"
+                              onChange={(e) => {
+                                const f = e.target.files?.[0];
+                                if (f) handleAttachOriginalFile(item.key, f);
+                              }}
+                            />
+                          </label>
+                        )}
                       </div>
                     )}
                   </div>
@@ -963,6 +986,7 @@ export default function RegistrationDetailPage() {
                   onClick={() => {
                     setPreviewDoc(null);
                     setActivePdfUrl(null);
+                    setPreviewDocKey(null);
                   }}
                   className="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200 flex items-center justify-center text-lg transition-colors cursor-pointer"
                 >
@@ -973,15 +997,7 @@ export default function RegistrationDetailPage() {
 
             {/* Viewer Body */}
             <div className="flex-1 overflow-auto p-4 sm:p-6 bg-slate-900/5 flex items-center justify-center min-h-[55vh]">
-              {isGeneratingPdf ? (
-                <div className="flex flex-col items-center justify-center p-12 text-center gap-3">
-                  <div className="w-10 h-10 border-4 border-[#E86A33] border-t-transparent rounded-full animate-spin" />
-                  <p className="text-sm font-bold text-slate-800">Generating Official PDF Document...</p>
-                  <p className="text-xs text-slate-500 max-w-xs">
-                    Rendering high-resolution A4 verification certificate for {fd.homeName}
-                  </p>
-                </div>
-              ) : activePdfUrl?.startsWith('data:image') || (previewDoc.dataUrl?.startsWith('data:image') && !activePdfUrl?.startsWith('data:application/pdf')) ? (
+              {activePdfUrl?.startsWith('data:image') || (previewDoc.dataUrl?.startsWith('data:image') && !activePdfUrl?.startsWith('data:application/pdf')) ? (
                 <img
                   src={activePdfUrl || previewDoc.dataUrl}
                   alt={previewDoc.name}
@@ -994,30 +1010,64 @@ export default function RegistrationDetailPage() {
                   title={previewDoc.name}
                 />
               ) : (
-                <div className="text-center p-8">
-                  <AlertCircle className="w-10 h-10 text-slate-400 mx-auto mb-2" />
-                  <p className="text-sm font-semibold text-slate-700">Unable to load document preview</p>
+                <div className="flex flex-col items-center justify-center p-8 text-center max-w-md mx-auto space-y-4">
+                  <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-200">
+                    <FileText className="w-7 h-7" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <h3 className="text-base font-bold text-slate-900">Original File Missing in Database</h3>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                      This registration record was saved in the database with metadata (<b>{previewDoc.name}</b>, {Math.round(previewDoc.size / 1024)} KB) but without the raw PDF file bytes.
+                    </p>
+                  </div>
+
+                  {previewDocKey && (
+                    <div className="w-full pt-2">
+                      <label className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#E86A33] hover:bg-[#d45823] text-white text-xs font-bold rounded-xl cursor-pointer shadow-sm transition-all">
+                        <Upload className="w-4 h-4" />
+                        <span>{isUploadingOriginal ? 'Saving to Database...' : 'Upload & Store Original PDF in DB'}</span>
+                        <input
+                          type="file"
+                          accept=".pdf,.png,.jpg,.jpeg"
+                          className="hidden"
+                          disabled={isUploadingOriginal}
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f && previewDocKey) handleAttachOriginalFile(previewDocKey, f);
+                          }}
+                        />
+                      </label>
+                      <p className="text-[11px] text-slate-400 mt-2">
+                        Uploads and permanently stores the original PDF into MongoDB Atlas for this application.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
 
             {/* Footer */}
             <div className="p-4 sm:px-6 border-t border-slate-200 bg-white flex items-center justify-between text-xs">
-              <span className="text-slate-500">Document status: Verified Official Record</span>
+              <span className="text-slate-500">
+                {activePdfUrl || previewDoc.dataUrl ? 'Original Document Verified' : 'Awaiting original file upload'}
+              </span>
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleDownloadDocument(previewDoc)}
-                  className="px-4 py-2 bg-[#E86A33] hover:bg-[#d45823] text-white font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>Download PDF</span>
-                </button>
+                {(activePdfUrl || previewDoc.dataUrl) && (
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadDocument(previewDoc)}
+                    className="px-4 py-2 bg-[#E86A33] hover:bg-[#d45823] text-white font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Download Original PDF</span>
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => {
                     setPreviewDoc(null);
                     setActivePdfUrl(null);
+                    setPreviewDocKey(null);
                   }}
                   className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg transition-all cursor-pointer"
                 >

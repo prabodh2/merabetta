@@ -52,7 +52,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     }
 
     const body = await request.json();
-    const { status, adminNotes, reviewedBy } = body;
+    const { status, adminNotes, reviewedBy, documents } = body;
 
     const validStatuses: EnrollmentStatus[] = ['submitted', 'approved', 'rejected'];
     if (status && !validStatuses.includes(status)) {
@@ -66,6 +66,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       status,
       adminNotes,
       reviewedBy: reviewedBy || 'Admin',
+      documents,
     });
 
     if (!updated) {
