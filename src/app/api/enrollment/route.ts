@@ -1,44 +1,39 @@
 import { NextResponse } from "next/server";
-import { getDatabase } from "@/lib/mongodb";
+import { saveEnrollment } from "@/lib/enrollmentStore";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { referenceId, flatData, fullData } = body;
 
-    if (!referenceId && !fullData) {
+    const dataToSave = fullData || body;
+
+    if (!dataToSave || typeof dataToSave !== 'object') {
       return NextResponse.json(
         { success: false, error: "Invalid payload: missing form data" },
         { status: 400 }
       );
     }
 
-    // Connect to database (uses 'merabetta' database)
-    const db = await getDatabase("merabetta");
-    const collection = db.collection("old age home registration");
-
-    const documentToInsert = {
-      referenceId: referenceId || `MB-OAH-${Math.floor(100000 + Math.random() * 900000)}`,
-      flatData: flatData || null,
-      fullData: fullData || body,
-      submittedAt: new Date(),
-      status: "submitted",
-    };
-
-    const result = await collection.insertOne(documentToInsert);
+    const result = await saveEnrollment({
+      referenceId,
+      flatData,
+      fullData: dataToSave,
+    });
 
     return NextResponse.json({
       success: true,
       message: "Form data successfully saved to MongoDB Atlas!",
       insertedId: result.insertedId,
-      referenceId: documentToInsert.referenceId,
+      referenceId: result.referenceId,
     });
-  } catch (error: any) {
-    console.error("Error inserting enrollment into MongoDB Atlas:", error);
+  } catch (error: unknown) {
+    console.error("Error inserting enrollment:", error);
+    const errorMessage = error instanceof Error ? error.message : "Failed to save enrollment data";
     return NextResponse.json(
       {
         success: false,
-        error: error?.message || "Failed to save enrollment data to MongoDB Atlas",
+        error: errorMessage,
       },
       { status: 500 }
     );

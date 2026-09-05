@@ -1,4 +1,5 @@
 export type OrganizationType = 'Government' | 'Private' | 'Trust/NGO' | 'Other';
+export type EnrollmentStatus = 'submitted' | 'approved' | 'rejected';
 
 export interface UploadedFileItem {
   id: string;
@@ -7,6 +8,18 @@ export interface UploadedFileItem {
   type: string;
   dataUrl?: string;
   uploadedAt: string;
+}
+
+export interface EnrollmentRecord {
+  _id: string;
+  referenceId: string;
+  status: EnrollmentStatus;
+  adminNotes?: string;
+  reviewedAt?: string | Date;
+  reviewedBy?: string;
+  submittedAt: string | Date;
+  fullData: EnrollmentFormData;
+  flatData?: Record<string, unknown>;
 }
 
 export interface EnrollmentFormData {
@@ -48,12 +61,16 @@ export interface EnrollmentFormData {
     independentLiving: boolean;
     dementiaCare: boolean;
     palliativeCare: boolean;
+    homeHospital: boolean;
     dayCareServices: boolean;
     meals: boolean;
     recreationalActivities: boolean;
     other: boolean;
     otherDetails?: string;
   };
+
+  // Facility Price Ranges (per facility: from and to values)
+  facilityPricing: Record<string, { from: string; to: string }>;
 
   // Step 3: Documents Uploaded
   documents: {
@@ -72,6 +89,12 @@ export interface EnrollmentFormData {
   commercialAgreed: boolean;
   declarationAgreed: boolean;
   submissionDate: string;
+
+  // Step 4 (Owner Section): Old Age Home Owner / Signatory Details
+  ownerName: string;
+  ownerPhone: string;
+  ownerEmail: string;
+  digitalSignature: string;
 }
 
 export const INITIAL_FORM_DATA: EnrollmentFormData = {
@@ -109,11 +132,23 @@ export const INITIAL_FORM_DATA: EnrollmentFormData = {
     independentLiving: false,
     dementiaCare: false,
     palliativeCare: false,
+    homeHospital: false,
     dayCareServices: false,
     meals: false,
     recreationalActivities: false,
     other: false,
     otherDetails: '',
+  },
+
+  facilityPricing: {
+    assistedLiving: { from: '15000', to: '20000' },
+    independentLiving: { from: '', to: '' },
+    dementiaCare: { from: '', to: '' },
+    palliativeCare: { from: '', to: '' },
+    homeHospital: { from: '', to: '' },
+    dayCareServices: { from: '', to: '' },
+    meals: { from: '', to: '' },
+    recreationalActivities: { from: '', to: '' },
   },
 
   documents: {
@@ -124,4 +159,9 @@ export const INITIAL_FORM_DATA: EnrollmentFormData = {
   commercialAgreed: false,
   declarationAgreed: false,
   submissionDate: new Date().toISOString().split('T')[0],
+
+  ownerName: '',
+  ownerPhone: '',
+  ownerEmail: '',
+  digitalSignature: '',
 };

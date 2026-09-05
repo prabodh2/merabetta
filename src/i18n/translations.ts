@@ -129,11 +129,19 @@ const translations = {
         'Specify other medical facilities (e.g. Oxygen support, ICU tie-up, Dialysis escort)',
 
       cardServices: 'Services & Care Offered',
+      priceRange: 'Price Range',
+      priceRangeSub: 'Range - from min to max (₹ / month)',
+      rangeFrom: 'Range - from',
+      rangeTo: 'to',
+      perMonth: '₹ / mo',
+      minPricePlaceholder: '15000',
+      maxPricePlaceholder: '20000',
       services: {
         assistedLiving: 'Assisted Living',
+        homeHospital: 'Hospital at Home',
+        palliativeCare: 'Palliative / Bedridden',
         independentLiving: 'Independent Living',
         dementiaCare: 'Dementia / Alzheimer Care',
-        palliativeCare: 'Palliative Care',
         dayCareServices: 'Day Care Services',
         meals: 'Nutritious Customized Meals',
         recreationalActivities: 'Recreational & Social Activities',
@@ -183,8 +191,8 @@ const translations = {
     // ── Section 4 ────────────────────────────────────────────────────────────
     s4: {
       sectionLabel: 'Section 4 of 4',
-      title: 'Commercial Terms & Declaration',
-      subtitle: 'Platform charges, digital promotion benefits & legal declaration.',
+      title: 'Commercial Terms, Declaration & Owner Sign-Off',
+      subtitle: 'Platform charges, digital promotion benefits, legal declaration & owner digital sign-off.',
 
       cardCommercial: 'Platform Commercial Terms',
       term1Label: 'Term 1 • Admission Fee',
@@ -212,6 +220,24 @@ const translations = {
       declaration3: 'All legal matters are subject to Pune Jurisdiction.',
       declarationCheckLabel:
         'I confirm that I am an authorized signatory and agree to all terms stated in this declaration.',
+
+      cardOwner: 'Old Age Home Owner / Director / Founder Details',
+      cardOwnerSub: 'Authorized signatory information and official digital signature.',
+      copyContactDetails: 'Copy details from Contact Person (Step 1)',
+      ownerName: 'Owner / Director / Founder Name',
+      ownerNamePlaceholder: 'Full name of Owner / Director / Founder',
+      ownerPhone: 'Phone Number',
+      ownerPhonePlaceholder: '9876543210',
+      ownerEmail: 'Mail ID',
+      ownerEmailPlaceholder: 'owner@oldagehome.com',
+      digitalSign: 'Digital Signature',
+      digitalSignSub: 'Sign with your finger, stylus, or mouse inside the box below',
+      clearSign: 'Clear Signature',
+      drawMode: 'Draw Signature',
+      typeMode: 'Type Signature',
+      typePlaceholder: 'Type your full name to generate digital signature',
+      signatureCaptured: 'Digital signature captured successfully',
+      dateSigned: 'Date Signed',
     },
 
     // ── Success Modal ────────────────────────────────────────────────────────
@@ -251,6 +277,10 @@ const translations = {
       currentResidents: 'Please enter valid current resident count.',
       commercialAgreed: 'You must accept the commercial terms to continue.',
       declarationAgreed: 'You must confirm and agree to the declaration.',
+      ownerName: 'Owner / Director / Founder name is required.',
+      ownerPhone: 'Valid 10-digit mobile number is required for owner.',
+      ownerEmail: 'Valid email address is required for owner.',
+      digitalSignature: 'Digital signature is required to complete the enrollment.',
     },
   },
 
@@ -371,11 +401,19 @@ const translations = {
         'इतर वैद्यकीय सुविधा नमूद करा (उदा. ऑक्सिजन सपोर्ट, ICU टाय-अप, डायलिसिस सेवा)',
 
       cardServices: 'प्रदान केल्या जाणाऱ्या सेवा',
+      priceRange: 'किंमत श्रेणी',
+      priceRangeSub: 'श्रेणी - किमान ते कमाल (₹ / महिना)',
+      rangeFrom: 'श्रेणी - पासून',
+      rangeTo: 'ते',
+      perMonth: '₹ / महिना',
+      minPricePlaceholder: '15000',
+      maxPricePlaceholder: '20000',
       services: {
         assistedLiving: 'सहाय्यित निवास',
+        homeHospital: 'हॉस्पिटल ॲट होम (घरी रुग्णालयीन काळजी)',
+        palliativeCare: 'पॅलिएटिव्ह / बेडरिडन (उपशामक व शय्याग्रस्त काळजी)',
         independentLiving: 'स्वतंत्र निवास',
         dementiaCare: 'स्मृतिभ्रंश / अल्झायमर काळजी',
-        palliativeCare: 'उपशामक काळजी',
         dayCareServices: 'दिवस काळजी सेवा',
         meals: 'पौष्टिक सानुकूल जेवण',
         recreationalActivities: 'मनोरंजन आणि सामाजिक उपक्रम',
@@ -423,8 +461,8 @@ const translations = {
 
     s4: {
       sectionLabel: '४ पैकी विभाग ४',
-      title: 'व्यावसायिक अटी आणि घोषणा',
-      subtitle: 'प्लॅटफॉर्म शुल्क, डिजिटल प्रचार लाभ आणि कायदेशीर घोषणा.',
+      title: 'व्यावसायिक अटी, घोषणा आणि मालक स्वाक्षरी',
+      subtitle: 'प्लॅटफॉर्म शुल्क, डिजिटल प्रचार लाभ, कायदेशीर घोषणा आणि मालक डिजिटल स्वाक्षरी.',
 
       cardCommercial: 'प्लॅटफॉर्म व्यावसायिक अटी',
       term1Label: 'अट १ • प्रवेश शुल्क',
@@ -452,6 +490,24 @@ const translations = {
       declaration3: 'सर्व कायदेशीर बाबी पुणे न्यायालयीन क्षेत्राच्या अधीन आहेत.',
       declarationCheckLabel:
         'मी पुष्टी करतो/करते की मी अधिकृत स्वाक्षरीकर्ता आहे आणि या घोषणेत नमूद केलेल्या सर्व अटींना सहमत आहे.',
+
+      cardOwner: 'वृद्धाश्रम मालक / संचालक / संस्थापक तपशील',
+      cardOwnerSub: 'अधिकृत स्वाक्षरीकर्ता माहिती आणि अधिकृत डिजिटल स्वाक्षरी.',
+      copyContactDetails: 'संपर्क व्यक्तीचे तपशील कॉपी करा (पायरी १)',
+      ownerName: 'मालक / संचालक / संस्थापक नाव',
+      ownerNamePlaceholder: 'मालक / संचालक / संस्थापक यांचे पूर्ण नाव',
+      ownerPhone: 'फोन नंबर',
+      ownerPhonePlaceholder: '९८७६५४३२१०',
+      ownerEmail: 'ईमेल आयडी',
+      ownerEmailPlaceholder: 'owner@oldagehome.com',
+      digitalSign: 'डिजिटल स्वाक्षरी',
+      digitalSignSub: 'खाली दिलेल्या बॉक्समध्ये बोट, स्टायलस किंवा माऊसने स्वाक्षरी करा',
+      clearSign: 'स्वाक्षरी पुसा',
+      drawMode: 'स्वाक्षरी काढा',
+      typeMode: 'नाव टाईप करा',
+      typePlaceholder: 'डिजिटल स्वाक्षरीसाठी तुमचे पूर्ण नाव टाईप करा',
+      signatureCaptured: 'डिजिटल स्वाक्षरी यशस्वीरित्या नोंदवली गेली',
+      dateSigned: 'स्वाक्षरी तारीख',
     },
 
     success: {
@@ -488,6 +544,10 @@ const translations = {
       currentResidents: 'कृपया वैध सध्याच्या रहिवाशांची संख्या प्रविष्ट करा.',
       commercialAgreed: 'पुढे जाण्यासाठी तुम्ही व्यावसायिक अटी स्वीकारणे आवश्यक आहे.',
       declarationAgreed: 'तुम्ही घोषणेची पुष्टी करणे आणि सहमत होणे आवश्यक आहे.',
+      ownerName: 'मालक / संचालक / संस्थापक यांचे नाव आवश्यक आहे.',
+      ownerPhone: 'मालकाचा वैध १० अंकी मोबाइल नंबर आवश्यक आहे.',
+      ownerEmail: 'मालकाचा वैध ईमेल पत्ता आवश्यक आहे.',
+      digitalSignature: 'नोंदणी पूर्ण करण्यासाठी डिजिटल स्वाक्षरी आवश्यक आहे.',
     },
   },
 
@@ -608,11 +668,19 @@ const translations = {
         'अन्य चिकित्सा सुविधाएं बताएं (उदा. ऑक्सीजन सपोर्ट, ICU टाई-अप, डायलिसिस सेवा)',
 
       cardServices: 'प्रदान की जाने वाली सेवाएं',
+      priceRange: 'मूल्य सीमा',
+      priceRangeSub: 'सीमा - न्यूनतम से अधिकतम (₹ / माह)',
+      rangeFrom: 'सीमा - से',
+      rangeTo: 'तक',
+      perMonth: '₹ / माह',
+      minPricePlaceholder: '15000',
+      maxPricePlaceholder: '20000',
       services: {
         assistedLiving: 'सहायता प्राप्त आवास',
+        homeHospital: 'हॉस्पिटल एट होम (घर पर अस्पताल देखभाल)',
+        palliativeCare: 'पैलिएटिव / बेडरिडन (उपशामक और शय्याग्रस्त देखभाल)',
         independentLiving: 'स्वतंत्र आवास',
         dementiaCare: 'मनोभ्रंश / अल्जाइमर देखभाल',
-        palliativeCare: 'उपशामक देखभाल',
         dayCareServices: 'दिन देखभाल सेवाएं',
         meals: 'पौष्टिक अनुकूलित भोजन',
         recreationalActivities: 'मनोरंजन और सामाजिक गतिविधियां',
@@ -660,8 +728,8 @@ const translations = {
 
     s4: {
       sectionLabel: '4 में से खंड 4',
-      title: 'व्यावसायिक शर्तें और घोषणा',
-      subtitle: 'प्लेटफ़ॉर्म शुल्क, डिजिटल प्रचार लाभ और कानूनी घोषणा।',
+      title: 'व्यावसायिक शर्तें, घोषणा और स्वामी हस्ताक्षर',
+      subtitle: 'प्लेटफ़ॉर्म शुल्क, डिजिटल प्रचार लाभ, कानूनी घोषणा और स्वामी डिजिटल हस्ताक्षर।',
 
       cardCommercial: 'प्लेटफ़ॉर्म व्यावसायिक शर्तें',
       term1Label: 'शर्त 1 • प्रवेश शुल्क',
@@ -689,6 +757,24 @@ const translations = {
       declaration3: 'सभी कानूनी मामले पुणे न्यायिक क्षेत्र के अधीन हैं।',
       declarationCheckLabel:
         'मैं पुष्टि करता/करती हूं कि मैं एक अधिकृत हस्ताक्षरकर्ता हूं और इस घोषणा में बताई गई सभी शर्तों से सहमत हूं।',
+
+      cardOwner: 'वृद्धाश्रम स्वामी / निदेशक / संस्थापक विवरण',
+      cardOwnerSub: 'अधिकृत हस्ताक्षरकर्ता जानकारी और आधिकारिक डिजिटल हस्ताक्षर।',
+      copyContactDetails: 'संपर्क व्यक्ति का विवरण कॉपी करें (चरण 1)',
+      ownerName: 'स्वामी / निदेशक / संस्थापक का नाम',
+      ownerNamePlaceholder: 'स्वामी / निदेशक / संस्थापक का पूरा नाम',
+      ownerPhone: 'फोन नंबर',
+      ownerPhonePlaceholder: '9876543210',
+      ownerEmail: 'ईमेल आईडी',
+      ownerEmailPlaceholder: 'owner@oldagehome.com',
+      digitalSign: 'डिजिटल हस्ताक्षर',
+      digitalSignSub: 'नीचे दिए गए बॉक्स में उंगली, स्टाइलस या माउस से हस्ताक्षर करें',
+      clearSign: 'हस्ताक्षर हटाएं',
+      drawMode: 'हस्ताक्षर बनाएं',
+      typeMode: 'नाम टाइप करें',
+      typePlaceholder: 'डिजिटल हस्ताक्षर के लिए अपना पूरा नाम टाइप करें',
+      signatureCaptured: 'डिजिटल हस्ताक्षर सफलतापूर्वक दर्ज किया गया',
+      dateSigned: 'हस्ताक्षर दिनांक',
     },
 
     success: {
@@ -725,6 +811,10 @@ const translations = {
       currentResidents: 'कृपया वर्तमान निवासियों की वैध संख्या दर्ज करें।',
       commercialAgreed: 'आगे बढ़ने के लिए आपको व्यावसायिक शर्तें स्वीकार करनी होंगी।',
       declarationAgreed: 'आपको घोषणा की पुष्टि और सहमति देनी होगी।',
+      ownerName: 'स्वामी / निदेशक / संस्थापक का नाम आवश्यक है।',
+      ownerPhone: 'स्वामी का वैध 10 अंकीय मोबाइल नंबर आवश्यक है।',
+      ownerEmail: 'स्वामी का वैध ईमेल पता आवश्यक है।',
+      digitalSignature: 'नामांकन पूरा करने के लिए डिजिटल हस्ताक्षर आवश्यक है।',
     },
   },
 } satisfies TranslationMap;

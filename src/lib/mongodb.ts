@@ -15,6 +15,7 @@ if (!uri) {
   clientPromise = Promise.reject(
     new Error("Invalid/Missing environment variable: 'MONGODB_URI'. Please set it in .env.local")
   );
+  clientPromise.catch(() => {});
 } else if (process.env.NODE_ENV === "development") {
   // In development mode, use a global variable so that the value
   // is preserved across module reloads caused by HMR.

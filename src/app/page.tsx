@@ -121,6 +121,18 @@ export default function EnrollmentPage() {
         if (!formData.declarationAgreed) {
           stepErrors.declarationAgreed = err.declarationAgreed;
         }
+        if (!formData.ownerName.trim()) {
+          stepErrors.ownerName = err.ownerName;
+        }
+        if (!formData.ownerPhone.trim() || formData.ownerPhone.length !== 10) {
+          stepErrors.ownerPhone = err.ownerPhone;
+        }
+        if (!formData.ownerEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.ownerEmail)) {
+          stepErrors.ownerEmail = err.ownerEmail;
+        }
+        if (!formData.digitalSignature || !formData.digitalSignature.trim()) {
+          stepErrors.digitalSignature = err.digitalSignature;
+        }
       }
 
       setErrors(stepErrors);
