@@ -15,7 +15,7 @@ export async function POST(request: Request) {
 
     // Connect to database (uses 'merabetta' database)
     const db = await getDatabase("merabetta");
-    const collection = db.collection("enrollments");
+    const collection = db.collection("old age home registration");
 
     const documentToInsert = {
       referenceId: referenceId || `MB-OAH-${Math.floor(100000 + Math.random() * 900000)}`,
