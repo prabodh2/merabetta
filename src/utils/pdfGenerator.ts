@@ -17,6 +17,19 @@ export interface DocumentPdfParams {
   submittedAt?: string;
 }
 
+function safeText(text: string | undefined | null): string {
+  if (!text) return '';
+  return text
+    .replace(/[✓✔]/g, '[OK]')
+    .replace(/[•●]/g, '-')
+    .replace(/[–—]/g, '-')
+    .replace(/[""]/g, '"')
+    .replace(/['']/g, "'")
+    .replace(/[₹]/g, 'Rs. ')
+    .replace(/[^\x20-\x7E\r\n\t]/g, ' ')
+    .trim();
+}
+
 /**
  * Generates an authentic, high-fidelity A4 PDF document for official verification.
  * Returns a data:application/pdf;base64,... string ready for <iframe src=...> and native PDF download.
@@ -60,9 +73,10 @@ export async function generateOfficialDocumentPdf(params: DocumentPdfParams): Pr
   });
 
   // 2. Top Emblem / Organization Header
-  const titleText = (params.docTitle || params.fileName.replace(/_/g, ' ').replace(/\.[^/.]+$/, '')).toUpperCase();
+  const rawTitle = params.docTitle || params.fileName.replace(/_/g, ' ').replace(/\.[^/.]+$/, '');
+  const titleText = safeText(rawTitle.toUpperCase());
 
-  page.drawText('GOVERNMENT OF MAHARASHTRA • PUBLIC HEALTH & SOCIAL ASSISTANCE', {
+  page.drawText('GOVERNMENT OF MAHARASHTRA - PUBLIC HEALTH & SOCIAL ASSISTANCE', {
     x: 70,
     y: height - 65,
     size: 9,
@@ -99,12 +113,12 @@ export async function generateOfficialDocumentPdf(params: DocumentPdfParams): Pr
   page.drawText(titleText, {
     x: 65,
     y: height - 123,
-    size: 14,
+    size: 13,
     font: fontBold,
     color: primaryOrange,
   });
 
-  page.drawText(`VERIFIED ARCHIVE FILE: ${params.fileName}`, {
+  page.drawText(`VERIFIED ARCHIVE FILE: ${safeText(params.fileName)}`, {
     x: 65,
     y: height - 134,
     size: 8,
@@ -127,7 +141,7 @@ export async function generateOfficialDocumentPdf(params: DocumentPdfParams): Pr
       });
     }
 
-    page.drawText(label, {
+    page.drawText(safeText(label), {
       x: 60,
       y: currentY,
       size: 10,
@@ -135,7 +149,7 @@ export async function generateOfficialDocumentPdf(params: DocumentPdfParams): Pr
       color: darkSlate,
     });
 
-    page.drawText(value || 'N/A', {
+    page.drawText(safeText(value) || 'N/A', {
       x: 230,
       y: currentY,
       size: 10,
@@ -196,10 +210,10 @@ export async function generateOfficialDocumentPdf(params: DocumentPdfParams): Pr
   });
 
   const checklist = [
-    '[✓] Document registered in Merabetta Senior Care Registry under reference ID ' + params.referenceId,
-    '[✓] Entity verified under the Maharashtra Social Welfare and Public Trusts Framework',
-    '[✓] Certified by Authorized Representative: ' + params.signatoryName,
-    '[✓] Jurisdiction: Pune Division, Maharashtra State',
+    `[OK] Document registered in Merabetta Senior Care Registry under reference ID ${safeText(params.referenceId)}`,
+    `[OK] Entity verified under the Maharashtra Social Welfare and Public Trusts Framework`,
+    `[OK] Certified by Authorized Representative: ${safeText(params.signatoryName)}`,
+    `[OK] Jurisdiction: Pune Division, Maharashtra State`,
   ];
 
   checklist.forEach((item, index) => {
@@ -265,7 +279,7 @@ export async function generateOfficialDocumentPdf(params: DocumentPdfParams): Pr
     color: slate600,
   });
 
-  page.drawText(`Page 1 of 1 • Generated for Ref ${params.referenceId}`, {
+  page.drawText(`Page 1 of 1 - Generated for Ref ${safeText(params.referenceId)}`, {
     x: 50,
     y: 38,
     size: 7,
