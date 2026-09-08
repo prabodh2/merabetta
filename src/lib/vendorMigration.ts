@@ -276,7 +276,37 @@ export async function migrateRegistrationToVendor(
       }
 
       // =====================================================
-      // 9. RETURN RESULT
+      // 9. CREATE AUDIT LOG
+      // =====================================================
+
+      await db
+        .collection("audit_log")
+        .insertOne(
+          {
+            action: "approve",
+
+            admin_id: approvedBy,
+
+            vendor_id: vendorId,
+
+            timestamp: now,
+
+            details: {
+              registration_reference:
+                registration.referenceId,
+
+              registration_id:
+                registration._id.toString(),
+
+              message:
+                "Vendor approved and migrated successfully"
+            }
+          },
+          { session }
+        );
+
+      // =====================================================
+      // 10. RETURN RESULT
       // =====================================================
 
       return {
