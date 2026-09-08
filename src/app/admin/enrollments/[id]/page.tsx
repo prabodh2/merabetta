@@ -912,16 +912,19 @@ export default function RegistrationDetailPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                 <div>
-                  <span className="text-slate-400 font-medium block">Owner / Director Name</span>
-                  <span className="font-bold text-slate-900">{fd.ownerName || 'N/A'}</span>
+                  <span className="text-slate-400 font-medium block">Owner / Authorized Person</span>
+                  <span className="font-bold text-slate-900">
+                    {fd.ownerName || fd.contactPersonName || 'N/A'}
+                    {!fd.ownerName && fd.designation ? ` (${fd.designation})` : ''}
+                  </span>
                 </div>
                 <div>
                   <span className="text-slate-400 font-medium block">Phone Number</span>
-                  <span className="font-bold text-slate-900">{fd.ownerPhone || 'N/A'}</span>
+                  <span className="font-bold text-slate-900">{fd.ownerPhone || fd.mobileNumber || 'N/A'}</span>
                 </div>
                 <div className="sm:col-span-2">
                   <span className="text-slate-400 font-medium block">Mail ID</span>
-                  <span className="font-bold text-slate-900">{fd.ownerEmail || 'N/A'}</span>
+                  <span className="font-bold text-slate-900">{fd.ownerEmail || fd.emailAddress || 'N/A'}</span>
                 </div>
               </div>
 
@@ -938,13 +941,18 @@ export default function RegistrationDetailPage() {
                       className="max-h-20 max-w-full object-contain"
                     />
                   ) : (
-                    <span className="text-xs text-slate-400 italic">No signature image attached</span>
+                    <div className="text-center py-2 text-xs text-slate-400 italic">
+                      <span>No signature image attached</span>
+                      <span className="block text-[10px] text-slate-400 not-italic mt-0.5">
+                        (Database seed / mock record)
+                      </span>
+                    </div>
                   )}
                 </div>
                 {fd.digitalSignature && (
                   <span className="text-[10px] text-emerald-700 font-semibold flex items-center gap-1 mt-1">
                     <Check className="w-3 h-3 stroke-[3]" />
-                    Digitally signed by {fd.ownerName || 'Authorized Signatory'}
+                    Digitally signed by {fd.ownerName || fd.contactPersonName || 'Authorized Signatory'}
                   </span>
                 )}
               </div>
