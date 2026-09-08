@@ -243,15 +243,6 @@ export default function AdminEnrollmentsPage() {
             </button>
 
             <Link
-              href="/homes"
-              target="_blank"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg shadow-2xs transition-all"
-            >
-              <span>Public Directory</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </Link>
-
-            <Link
               href="/"
               target="_blank"
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-white bg-[#E86A33] hover:bg-[#D85820] rounded-lg shadow-2xs transition-all"
