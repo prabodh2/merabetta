@@ -73,7 +73,13 @@ export default function AdminEnrollmentsPage() {
       if (saved.limit) setLimit(saved.limit);
       if (saved.search) setSearchQuery(saved.search);
       if (saved.status) setSelectedStatus(saved.status);
-      if (saved.sortOrder) setSortOrder(saved.sortOrder);
+      if (saved.sortOrder && (saved.sortOrder === 'asc' || saved.sortOrder === 'desc')) {
+        setSortOrder(saved.sortOrder);
+      } else {
+        setSortOrder('desc');
+      }
+    } else {
+      setSortOrder('desc');
     }
     setLastRefreshed(getLastRefreshedTime());
   }, []);
@@ -340,10 +346,14 @@ export default function AdminEnrollmentsPage() {
               <button
                 type="button"
                 onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-all cursor-pointer"
-                title="Toggle sort order"
+                className={`inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+                  sortOrder === 'desc'
+                    ? 'bg-orange-50/80 text-[#E86A33] border-orange-200 hover:bg-orange-100 shadow-2xs'
+                    : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+                }`}
+                title="Click to toggle sorting between Newest and Oldest"
               >
-                <ArrowUpDown className="w-3.5 h-3.5 text-slate-500" />
+                <ArrowUpDown className={`w-3.5 h-3.5 ${sortOrder === 'desc' ? 'text-[#E86A33]' : 'text-slate-500'}`} />
                 <span>{sortOrder === 'desc' ? 'Newest First' : 'Oldest First'}</span>
               </button>
 
@@ -430,6 +440,7 @@ export default function AdminEnrollmentsPage() {
                     onClick={() => {
                       setSearchQuery('');
                       setSelectedStatus('all');
+                      setSortOrder('desc');
                     }}
                     className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-all cursor-pointer"
                   >
@@ -447,7 +458,21 @@ export default function AdminEnrollmentsPage() {
                     <th className="py-3.5 px-4">Old Age Home</th>
                     <th className="py-3.5 px-4">Owner & Contact</th>
                     <th className="py-3.5 px-4">Facilities & Pricing</th>
-                    <th className="py-3.5 px-4">Submitted</th>
+                    <th className="py-3.5 px-4">
+                      <button
+                        type="button"
+                        onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                        className="inline-flex items-center gap-1 font-bold text-slate-500 uppercase tracking-wider hover:text-[#E86A33] transition-colors cursor-pointer group"
+                        title="Click to sort by submission date"
+                      >
+                        <span>Submitted</span>
+                        <ArrowUpDown
+                          className={`w-3 h-3 transition-colors ${
+                            sortOrder === 'desc' ? 'text-[#E86A33]' : 'text-slate-400 group-hover:text-[#E86A33]'
+                          }`}
+                        />
+                      </button>
+                    </th>
                     <th className="py-3.5 px-4">Status</th>
                     <th className="py-3.5 px-4 text-right">Actions</th>
                   </tr>

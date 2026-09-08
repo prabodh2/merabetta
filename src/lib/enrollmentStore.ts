@@ -97,25 +97,84 @@ export async function getEnrollments(
       const totalPages = Math.ceil(totalRecords / limit) || 1;
       const skip = (page - 1) * limit;
 
-      const cursor = collection
-        .find(query)
-        .sort({ submittedAt: sortOrder })
-        .skip(skip)
-        .limit(limit);
+      // Compute unified sortDate across all possible timestamp fields (submittedAt, createdAt, submissionDate, or ObjectId timestamp)
+      const pipeline: Record<string, unknown>[] = [
+        { $match: query },
+        {
+          $addFields: {
+            sortDate: {
+              $convert: {
+                input: {
+                  $ifNull: ['$submittedAt', '$createdAt', '$submissionDate', { $toDate: '$_id' }],
+                },
+                to: 'date',
+                onError: { $toDate: '$_id' },
+                onNull: { $toDate: '$_id' },
+              },
+            },
+          },
+        },
+        {
+          $sort: {
+            sortDate: sortOrder,
+            _id: sortOrder,
+          },
+        },
+        { $skip: skip },
+        { $limit: limit },
+      ];
 
-      const rawItems = await cursor.toArray();
+      let rawItems: any[] = [];
+      try {
+        rawItems = await collection.aggregate(pipeline).toArray();
+      } catch (aggErr) {
+        console.warn('[getEnrollments] Aggregation failed, falling back to standard cursor sort:', aggErr);
+        rawItems = await collection
+          .find(query)
+          .sort({ submittedAt: sortOrder, createdAt: sortOrder, _id: sortOrder })
+          .skip(skip)
+          .limit(limit)
+          .toArray();
+      }
 
-      const records: EnrollmentRecord[] = rawItems.map((item) => ({
-        _id: item._id.toString(),
-        referenceId: item.referenceId || `MB-OAH-${item._id.toString().slice(-6)}`,
-        status: (item.status as EnrollmentStatus) || 'submitted',
-        adminNotes: item.adminNotes || '',
-        reviewedAt: item.reviewedAt || undefined,
-        reviewedBy: item.reviewedBy || '',
-        submittedAt: item.submittedAt || new Date().toISOString(),
-        fullData: (item.fullData || item) as EnrollmentFormData,
-        flatData: item.flatData || undefined,
-      }));
+      const records: EnrollmentRecord[] = rawItems.map((item) => {
+        let finalSubmittedAt = item.submittedAt;
+        if (!finalSubmittedAt) {
+          if (item.createdAt) {
+            finalSubmittedAt =
+              typeof item.createdAt === 'string'
+                ? item.createdAt
+                : new Date(item.createdAt).toISOString();
+          } else if (item.submissionDate) {
+            finalSubmittedAt =
+              typeof item.submissionDate === 'string'
+                ? item.submissionDate.includes('T')
+                  ? item.submissionDate
+                  : `${item.submissionDate}T00:00:00.000Z`
+                : new Date(item.submissionDate).toISOString();
+          } else if (item.sortDate) {
+            finalSubmittedAt = new Date(item.sortDate).toISOString();
+          } else if (item._id && typeof item._id.getTimestamp === 'function') {
+            finalSubmittedAt = item._id.getTimestamp().toISOString();
+          } else {
+            finalSubmittedAt = new Date().toISOString();
+          }
+        } else if (typeof finalSubmittedAt !== 'string') {
+          finalSubmittedAt = new Date(finalSubmittedAt).toISOString();
+        }
+
+        return {
+          _id: item._id.toString(),
+          referenceId: item.referenceId || `MB-OAH-${item._id.toString().slice(-6)}`,
+          status: (item.status as EnrollmentStatus) || 'submitted',
+          adminNotes: item.adminNotes || '',
+          reviewedAt: item.reviewedAt || undefined,
+          reviewedBy: item.reviewedBy || '',
+          submittedAt: finalSubmittedAt,
+          fullData: (item.fullData || item) as EnrollmentFormData,
+          flatData: item.flatData || undefined,
+        };
+      });
 
       // Stats counts
       const [totalCount, submittedCount, approvedCount, rejectedCount] = await Promise.all([
@@ -166,8 +225,13 @@ export async function getEnrollments(
 
   // Sort
   filtered.sort((a, b) => {
-    const timeA = new Date(a.submittedAt).getTime();
-    const timeB = new Date(b.submittedAt).getTime();
+    const getTimestamp = (rec: any) => {
+      const dateVal = rec.submittedAt || rec.createdAt || rec.submissionDate;
+      const t = dateVal ? new Date(dateVal).getTime() : 0;
+      return isNaN(t) ? 0 : t;
+    };
+    const timeA = getTimestamp(a);
+    const timeB = getTimestamp(b);
     return sortOrder === 1 ? timeA - timeB : timeB - timeA;
   });
 
@@ -210,6 +274,29 @@ export async function getEnrollmentById(idOrRef: string): Promise<EnrollmentReco
 
       const item = await collection.findOne(query);
       if (item) {
+        let finalSubmittedAt = item.submittedAt;
+        if (!finalSubmittedAt) {
+          if (item.createdAt) {
+            finalSubmittedAt =
+              typeof item.createdAt === 'string'
+                ? item.createdAt
+                : new Date(item.createdAt).toISOString();
+          } else if (item.submissionDate) {
+            finalSubmittedAt =
+              typeof item.submissionDate === 'string'
+                ? item.submissionDate.includes('T')
+                  ? item.submissionDate
+                  : `${item.submissionDate}T00:00:00.000Z`
+                : new Date(item.submissionDate).toISOString();
+          } else if (item._id && typeof item._id.getTimestamp === 'function') {
+            finalSubmittedAt = item._id.getTimestamp().toISOString();
+          } else {
+            finalSubmittedAt = new Date().toISOString();
+          }
+        } else if (typeof finalSubmittedAt !== 'string') {
+          finalSubmittedAt = new Date(finalSubmittedAt).toISOString();
+        }
+
         return {
           _id: item._id.toString(),
           referenceId: item.referenceId || `MB-OAH-${item._id.toString().slice(-6)}`,
@@ -217,7 +304,7 @@ export async function getEnrollmentById(idOrRef: string): Promise<EnrollmentReco
           adminNotes: item.adminNotes || '',
           reviewedAt: item.reviewedAt || undefined,
           reviewedBy: item.reviewedBy || '',
-          submittedAt: item.submittedAt || new Date().toISOString(),
+          submittedAt: finalSubmittedAt,
           fullData: (item.fullData || item) as EnrollmentFormData,
           flatData: item.flatData || undefined,
         };
@@ -309,7 +396,8 @@ export async function saveEnrollment(payload: {
 }): Promise<{ insertedId: string; referenceId: string }> {
   const referenceId =
     payload.referenceId || `MB-OAH-${Math.floor(100000 + Math.random() * 900000)}`;
-  const submittedAt = new Date().toISOString();
+  const now = new Date();
+  const submittedAt = now.toISOString();
   const flatData = payload.flatData || flattenFormData(payload.fullData, referenceId);
 
   const docToInsert = {
@@ -317,6 +405,8 @@ export async function saveEnrollment(payload: {
     flatData,
     fullData: payload.fullData,
     submittedAt,
+    createdAt: now,
+    submissionDate: submittedAt.split('T')[0],
     status: 'submitted' as EnrollmentStatus,
     adminNotes: '',
   };
