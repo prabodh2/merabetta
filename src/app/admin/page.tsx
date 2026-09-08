@@ -124,8 +124,11 @@ export default function AdminEnrollmentsPage() {
       }
     }
 
-    if (!records.length) setIsLoading(true);
-    else setIsRefreshing(true);
+    if (isForced) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
 
     try {
       const params = new URLSearchParams({
@@ -143,7 +146,7 @@ export default function AdminEnrollmentsPage() {
         const recs = data.records || [];
         const totRecs = data.totalRecords || 0;
         const totPages = data.totalPages || 1;
-        const st = data.stats || stats;
+        const st = data.stats || { total: totRecs, submitted: 0, approved: 0, rejected: 0 };
 
         setRecords(recs);
         setTotalRecords(totRecs);
@@ -167,7 +170,7 @@ export default function AdminEnrollmentsPage() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [currentPage, limit, debouncedSearch, selectedStatus, sortOrder, records.length, stats]);
+  }, [currentPage, limit, debouncedSearch, selectedStatus, sortOrder]);
 
   useEffect(() => {
     fetchEnrollments();
