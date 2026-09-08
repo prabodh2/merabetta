@@ -6,6 +6,7 @@ import Link from 'next/link';
 import BrandLogo from '@/components/BrandLogo';
 import { EnrollmentRecord, EnrollmentStatus, UploadedFileItem } from '@/types/enrollment';
 import { exportEnrollmentsToExcel } from '@/utils/adminExport';
+import { updateRecordInCache } from '@/utils/adminCache';
 import {
   ArrowLeft,
   Building2,
@@ -153,6 +154,7 @@ export default function RegistrationDetailPage() {
         setRecord(data.record);
         setPreviewDoc(updatedItem);
         setActivePdfUrl(dataUrl);
+        updateRecordInCache(id, { fullData: (data.record.fullData || {}) as any });
       }
     } catch (err) {
       console.error('Failed to attach original file:', err);
@@ -220,6 +222,11 @@ export default function RegistrationDetailPage() {
         setAdminNotes(data.record.adminNotes || '');
         setIsRejectModalOpen(false);
         setIsApproveModalOpen(false);
+        // Synchronously update cached data so going back to list reflects the new status instantly
+        updateRecordInCache(id, {
+          status,
+          adminNotes: notes !== undefined ? notes : adminNotes,
+        });
       }
     } catch (err) {
       console.error('Failed to update status:', err);
@@ -245,6 +252,9 @@ export default function RegistrationDetailPage() {
       if (data.success && data.record) {
         setRecord(data.record);
         setSaveNotesSuccess(true);
+        updateRecordInCache(id, {
+          adminNotes,
+        });
         setTimeout(() => setSaveNotesSuccess(false), 2500);
       }
     } catch (err) {

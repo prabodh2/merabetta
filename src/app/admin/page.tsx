@@ -29,6 +29,18 @@ import {
   AlertCircle,
 } from 'lucide-react';
 
+import {
+  generateQueryKey,
+  getAdminQueryCache,
+  setAdminQueryCache,
+  clearAdminCache,
+  updateRecordInCache,
+  saveAdminFilters,
+  getSavedAdminFilters,
+  getLastRefreshedTime,
+  checkAndConsumeBrowserReload,
+} from '@/utils/adminCache';
+
 export default function AdminEnrollmentsPage() {
   const [records, setRecords] = useState<EnrollmentRecord[]>([]);
   const [totalRecords, setTotalRecords] = useState<number>(0);
@@ -42,6 +54,7 @@ export default function AdminEnrollmentsPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [lastRefreshed, setLastRefreshed] = useState<string | null>(null);
   const [stats, setStats] = useState<{
     total: number;
     submitted: number;
@@ -49,18 +62,69 @@ export default function AdminEnrollmentsPage() {
     rejected: number;
   }>({ total: 0, submitted: 0, approved: 0, rejected: 0 });
 
+  // On mount: handle browser reload or restore saved filters
+  useEffect(() => {
+    // If the browser tab was refreshed (F5/Cmd+R), clear cache so fresh DB records are pulled
+    checkAndConsumeBrowserReload();
+
+    const saved = getSavedAdminFilters();
+    if (saved) {
+      if (saved.page) setCurrentPage(saved.page);
+      if (saved.limit) setLimit(saved.limit);
+      if (saved.search) setSearchQuery(saved.search);
+      if (saved.status) setSelectedStatus(saved.status);
+      if (saved.sortOrder) setSortOrder(saved.sortOrder);
+    }
+    setLastRefreshed(getLastRefreshedTime());
+  }, []);
+
   // Debounce search input
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery);
-      setCurrentPage(1);
     }, 350);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Fetch enrollments from API
-  const fetchEnrollments = useCallback(async (isBackground = false) => {
-    if (!isBackground) setIsLoading(true);
+  // Save filters whenever they change
+  useEffect(() => {
+    saveAdminFilters({
+      page: currentPage,
+      limit,
+      search: searchQuery,
+      status: selectedStatus,
+      sortOrder,
+    });
+  }, [currentPage, limit, searchQuery, selectedStatus, sortOrder]);
+
+  // Fetch enrollments from API or Cache (Option 2: database only loads once until Refresh is clicked)
+  const fetchEnrollments = useCallback(async (isForced = false) => {
+    const queryKey = generateQueryKey({
+      page: currentPage,
+      limit,
+      search: debouncedSearch,
+      status: selectedStatus,
+      sortOrder,
+    });
+
+    // If not forced by the manual "Refresh" button, check cache first
+    if (!isForced) {
+      const cached = getAdminQueryCache(queryKey);
+      if (cached) {
+        setRecords(cached.records || []);
+        setTotalRecords(cached.totalRecords || 0);
+        setTotalPages(cached.totalPages || 1);
+        if (cached.stats) {
+          setStats(cached.stats);
+        }
+        setIsLoading(false);
+        setIsRefreshing(false);
+        setLastRefreshed(getLastRefreshedTime());
+        return; // Zero database queries, instant load!
+      }
+    }
+
+    if (!records.length) setIsLoading(true);
     else setIsRefreshing(true);
 
     try {
@@ -76,12 +140,26 @@ export default function AdminEnrollmentsPage() {
       const data = await res.json();
 
       if (data.success) {
-        setRecords(data.records || []);
-        setTotalRecords(data.totalRecords || 0);
-        setTotalPages(data.totalPages || 1);
+        const recs = data.records || [];
+        const totRecs = data.totalRecords || 0;
+        const totPages = data.totalPages || 1;
+        const st = data.stats || stats;
+
+        setRecords(recs);
+        setTotalRecords(totRecs);
+        setTotalPages(totPages);
         if (data.stats) {
-          setStats(data.stats);
+          setStats(st);
         }
+
+        // Lock in cache so back navigation never queries database again
+        setAdminQueryCache(queryKey, {
+          records: recs,
+          totalRecords: totRecs,
+          totalPages: totPages,
+          stats: st,
+        });
+        setLastRefreshed(getLastRefreshedTime());
       }
     } catch (err) {
       console.error('Error fetching admin enrollments:', err);
@@ -89,7 +167,7 @@ export default function AdminEnrollmentsPage() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [currentPage, limit, debouncedSearch, selectedStatus, sortOrder]);
+  }, [currentPage, limit, debouncedSearch, selectedStatus, sortOrder, records.length, stats]);
 
   useEffect(() => {
     fetchEnrollments();
@@ -105,11 +183,12 @@ export default function AdminEnrollmentsPage() {
       });
       const data = await res.json();
       if (data.success) {
-        // Optimistically update list
+        // Optimistically update list in state
         setRecords((prev) =>
           prev.map((rec) => (rec._id === id || rec.referenceId === id ? { ...rec, status: newStatus } : rec))
         );
-        fetchEnrollments(true);
+        // Update cache so navigating away and returning preserves the updated status
+        updateRecordInCache(id, { status: newStatus });
       }
     } catch (err) {
       console.error('Failed to update status:', err);
@@ -140,11 +219,21 @@ export default function AdminEnrollmentsPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            {lastRefreshed && (
+              <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-slate-500 bg-slate-50 border border-slate-200/80 rounded-lg">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                <span>Locked • {lastRefreshed}</span>
+              </span>
+            )}
+
             <button
-              onClick={() => fetchEnrollments(true)}
+              onClick={() => {
+                clearAdminCache();
+                fetchEnrollments(true);
+              }}
               disabled={isRefreshing}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-all cursor-pointer disabled:opacity-50"
-              title="Refresh records"
+              title="Force reload database records"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[#E86A33]' : ''}`} />
               <span className="hidden sm:inline">Refresh</span>
