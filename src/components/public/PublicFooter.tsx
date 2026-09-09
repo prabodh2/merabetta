@@ -98,7 +98,7 @@ export default function PublicFooter() {
             </h4>
             <div className="space-y-2">
               <a
-                href="https://wa.me/919371458326?text=Hello%20MeraBetta%20Team%2C%20I%20am%20looking%20for%20a%20verified%20senior%20living%20home.%20Please%20guide%20me."
+                href="https://wa.me/919371458326?text=Hello%20MeraBetta%20Team%2C%20I%20am%20looking%20for%20a%20trusted%20senior%20living%20%2F%20old%20age%20home%20facility.%20Please%20assist%20me"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 text-emerald-700 font-bold hover:text-emerald-800 transition-colors"
@@ -107,11 +107,11 @@ export default function PublicFooter() {
                 <span>WhatsApp: +91 93714 58326</span>
               </a>
               <a
-                href="tel:+919371458326"
+                href="tel:+918999188267"
                 className="flex items-center gap-2 text-slate-900 font-bold hover:text-[#E86A33] transition-colors"
               >
                 <PhoneCall className="w-4 h-4 text-[#E86A33]" />
-                <span>+91 93714 58326</span>
+                <span>+91 89991 88267</span>
               </a>
               <a
                 href="mailto:support@merabetta.com"

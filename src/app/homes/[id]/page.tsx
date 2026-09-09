@@ -36,11 +36,13 @@ import {
   ChevronRight,
   Info,
 } from 'lucide-react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 export default function FacilityDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params?.id as string;
+  const { t, language } = useLanguage();
 
   const [facility, setFacility] = useState<PublicFacility | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -58,7 +60,7 @@ export default function FacilityDetailPage() {
     d.setDate(d.getDate() + 1);
     return d.toISOString().split('T')[0];
   });
-  const [timeSlot, setTimeSlot] = useState<string>('Morning (10:00 AM – 01:00 PM)');
+  const [timeSlot, setTimeSlot] = useState<string>('Morning');
   const [careLevel, setCareLevel] = useState<string>('Assisted Living');
   const [roomChoice, setRoomChoice] = useState<string>('Private Suite');
   const [isSubmittingInquiry, setIsSubmittingInquiry] = useState<boolean>(false);
@@ -139,7 +141,7 @@ export default function FacilityDetailPage() {
         <PublicNavbar />
         <div className="flex-1 flex flex-col items-center justify-center gap-3 py-24 text-slate-400">
           <div className="w-10 h-10 border-4 border-[#E86A33] border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm font-bold text-slate-700">Loading verified facility profile...</p>
+          <p className="text-sm font-bold text-slate-700">{t.detail.loadingProfile}</p>
         </div>
         <PublicFooter />
       </div>
@@ -154,14 +156,14 @@ export default function FacilityDetailPage() {
           <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto">
             <AlertCircle className="w-6 h-6" />
           </div>
-          <h2 className="text-xl font-black text-slate-900">Facility Not Found</h2>
+          <h2 className="text-xl font-black text-slate-900">{t.detail.notFound}</h2>
           <p className="text-xs text-slate-500">{errorMsg || 'The requested senior living facility is not available.'}</p>
           <Link
             href="/homes"
             className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#E86A33] text-white text-xs font-bold shadow-xs hover:bg-[#D85820]"
           >
             <ChevronLeft className="w-4 h-4" />
-            <span>Return to Directory</span>
+            <span>{t.detail.returnToDirectory}</span>
           </Link>
         </div>
         <PublicFooter />
@@ -185,7 +187,7 @@ export default function FacilityDetailPage() {
             {/* Breadcrumb links */}
             <div className="flex items-center gap-1.5 text-slate-500 flex-wrap">
               <Link href="/homes" className="hover:text-[#E86A33] font-semibold transition-colors">
-                Homes Directory
+                {t.detail.breadcrumbs.homes}
               </Link>
               <span>/</span>
               <Link href={`/homes?city=${facility.city.toLowerCase()}`} className="hover:text-[#E86A33] font-semibold transition-colors">
@@ -203,7 +205,7 @@ export default function FacilityDetailPage() {
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold shadow-2xs transition-all cursor-pointer"
               >
                 {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Share2 className="w-3.5 h-3.5" />}
-                <span>{copiedLink ? 'Link Copied!' : 'Share'}</span>
+                <span>{copiedLink ? t.detail.copied : t.detail.share}</span>
               </button>
 
               <span className="font-mono text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
@@ -220,12 +222,12 @@ export default function FacilityDetailPage() {
               <div className="flex items-center gap-2 flex-wrap mb-1">
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-extrabold">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                  MeraBetta Verified Facility
+                  {t.detail.verifiedFacility}
                 </span>
                 <span className="text-[11px] font-bold text-[#E86A33] bg-orange-50 px-2.5 py-0.5 rounded-full">
-                  {facility.organizationType} Organization
+                  {facility.organizationType} {t.detail.organization}
                 </span>
-                <span className="text-[11px] text-slate-400 font-medium">Est. {facility.yearEstablished}</span>
+                <span className="text-[11px] text-slate-400 font-medium">{t.detail.est} {facility.yearEstablished}</span>
               </div>
 
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight">
@@ -247,7 +249,7 @@ export default function FacilityDetailPage() {
               </div>
               <div>
                 <div className="text-sm font-black text-slate-900">{facility.rating} / 5.0</div>
-                <div className="text-[10px] text-slate-400 font-medium">Based on {facility.reviewCount} family reviews</div>
+                <div className="text-[10px] text-slate-400 font-medium">{t.detail.reviews(facility.reviewCount)}</div>
               </div>
             </div>
           </div>
@@ -295,7 +297,7 @@ export default function FacilityDetailPage() {
               onClick={() => setActivePhotoLightboxIdx(0)}
               className="absolute bottom-4 right-4 inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/95 hover:bg-white text-slate-800 text-xs font-bold shadow-lg backdrop-blur-md transition-all cursor-pointer hover:scale-103 active:scale-98"
             >
-              <span>View All {photos.length} Photos</span>
+              <span>{t.detail.viewPhotos(photos.length)}</span>
             </button>
           </div>
         </section>
@@ -309,13 +311,13 @@ export default function FacilityDetailPage() {
               </div>
               <div>
                 <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
-                  <span>MeraBetta Verified Safety & Quality Standards</span>
+                  <span>{t.detail.standardsTitle}</span>
                   <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">
-                    Official Partner
+                    {t.detail.officialPartner}
                   </span>
                 </h3>
                 <p className="text-xs text-slate-600 mt-0.5">
-                  Registration No: <b className="font-mono text-slate-800">{facility.registrationNumber}</b> • Validated by MeraBetta Medical & Legal Audit Team.
+                  {t.detail.regNotice(facility.registrationNumber)}
                 </p>
               </div>
             </div>
@@ -323,15 +325,15 @@ export default function FacilityDetailPage() {
             <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold text-emerald-800">
               <span className="bg-white px-3 py-1 rounded-lg border border-emerald-200 flex items-center gap-1 shadow-2xs">
                 <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
-                Fire Safety NOC
+                {t.detail.fireSafety}
               </span>
               <span className="bg-white px-3 py-1 rounded-lg border border-emerald-200 flex items-center gap-1 shadow-2xs">
                 <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
-                24/7 CCTV Monitored
+                {t.detail.cctv}
               </span>
               <span className="bg-white px-3 py-1 rounded-lg border border-emerald-200 flex items-center gap-1 shadow-2xs">
                 <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
-                Registered Doctors
+                {t.detail.registeredDoctors}
               </span>
             </div>
           </div>
@@ -346,29 +348,29 @@ export default function FacilityDetailPage() {
               <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-4">
                 <div className="flex items-center gap-2 text-xs font-extrabold text-[#E86A33] uppercase tracking-wider">
                   <Building2 className="w-4 h-4" />
-                  <span>Facility Overview</span>
+                  <span>{t.detail.overviewBadge}</span>
                 </div>
                 <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                  About {facility.name}
+                  {t.detail.about(facility.name)}
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  Established in {facility.yearEstablished}, {facility.name} is a premier senior care and assisted living home situated in {facility.city}. Designed with elderly ergonomics, wheelchair-wide corridors, anti-skid flooring, and serene natural courtyards, our facility offers compassionate medical supervision and vibrant community life for seniors.
+                  {t.detail.aboutDesc(facility.yearEstablished, facility.name, facility.city)}
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
                   <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 text-center">
-                    <span className="text-[11px] text-slate-400 font-semibold block uppercase">Total Beds</span>
+                    <span className="text-[11px] text-slate-400 font-semibold block uppercase">{t.detail.totalBeds}</span>
                     <span className="text-lg font-black text-slate-900 mt-0.5">{facility.capacity}</span>
                   </div>
                   <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 text-center">
-                    <span className="text-[11px] text-slate-400 font-semibold block uppercase">Residents</span>
+                    <span className="text-[11px] text-slate-400 font-semibold block uppercase">{t.detail.residents}</span>
                     <span className="text-lg font-black text-emerald-700 mt-0.5">{facility.currentResidents}</span>
                   </div>
                   <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 text-center">
-                    <span className="text-[11px] text-slate-400 font-semibold block uppercase">Care Ratio</span>
+                    <span className="text-[11px] text-slate-400 font-semibold block uppercase">{t.detail.careRatio}</span>
                     <span className="text-lg font-black text-slate-900 mt-0.5">1:3</span>
                   </div>
                   <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 text-center">
-                    <span className="text-[11px] text-slate-400 font-semibold block uppercase">Emergency</span>
+                    <span className="text-[11px] text-slate-400 font-semibold block uppercase">{t.detail.emergency}</span>
                     <span className="text-lg font-black text-[#E86A33] mt-0.5">24/7 ICU</span>
                   </div>
                 </div>
@@ -378,11 +380,11 @@ export default function FacilityDetailPage() {
               <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-5">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <div>
-                    <h3 className="text-lg font-black text-slate-900">Accommodation & Monthly Tariffs</h3>
-                    <p className="text-xs text-slate-500">Transparent packages including meals, housekeeping, and nursing</p>
+                    <h3 className="text-lg font-black text-slate-900">{t.detail.tariffsTitle}</h3>
+                    <p className="text-xs text-slate-500">{t.detail.tariffsSubtitle}</p>
                   </div>
                   <span className="text-[11px] font-bold text-[#E86A33] bg-orange-50 px-2.5 py-1 rounded-full">
-                    All-Inclusive Meals
+                    {t.detail.allInclusiveMeals}
                   </span>
                 </div>
 
@@ -391,31 +393,31 @@ export default function FacilityDetailPage() {
                   <div className="p-4 rounded-2xl border-2 border-orange-200 bg-orange-50/20 flex flex-col justify-between space-y-3">
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-black text-slate-900">Deluxe Private Suite</span>
+                        <span className="text-xs font-black text-slate-900">{t.detail.deluxeSuite}</span>
                         <span className="text-[10px] font-bold px-1.5 py-0.5 bg-orange-100 text-[#E86A33] rounded">
-                          POPULAR
+                          {t.detail.popular}
                         </span>
                       </div>
                       <p className="text-[11px] text-slate-500">
-                        Single occupancy room with attached private bathroom, air-conditioning, TV, and garden balcony.
+                        {t.detail.deluxeDesc}
                       </p>
                       <ul className="text-[11px] text-slate-600 space-y-1 pt-1">
                         <li className="flex items-center gap-1.5">
                           <Check className="w-3 h-3 text-emerald-600" />
-                          <span>Private Attached Washroom</span>
+                          <span>{t.detail.deluxeFeature1}</span>
                         </li>
                         <li className="flex items-center gap-1.5">
                           <Check className="w-3 h-3 text-emerald-600" />
-                          <span>Dedicated Nurse Call Bell</span>
+                          <span>{t.detail.deluxeFeature2}</span>
                         </li>
                         <li className="flex items-center gap-1.5">
                           <Check className="w-3 h-3 text-emerald-600" />
-                          <span>Air Conditioned & Wardrobe</span>
+                          <span>{t.detail.deluxeFeature3}</span>
                         </li>
                       </ul>
                     </div>
                     <div className="pt-2 border-t border-orange-200/60">
-                      <span className="text-[10px] text-slate-400 block font-semibold">Monthly Package:</span>
+                      <span className="text-[10px] text-slate-400 block font-semibold">{t.detail.monthlyPackage}</span>
                       <span className="text-base font-black text-slate-900 flex items-center">
                         <IndianRupee className="w-3.5 h-3.5 text-[#E86A33]" />
                         {facility.pricing.assistedLiving?.from || 22000} - {facility.pricing.assistedLiving?.to || 28000}
@@ -428,31 +430,31 @@ export default function FacilityDetailPage() {
                   <div className="p-4 rounded-2xl border border-slate-200 bg-white flex flex-col justify-between space-y-3">
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-black text-slate-900">Twin Sharing Room</span>
+                        <span className="text-xs font-black text-slate-900">{t.detail.twinRoom}</span>
                         <span className="text-[10px] font-bold px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded">
-                          VALUE
+                          {t.detail.value}
                         </span>
                       </div>
                       <p className="text-[11px] text-slate-500">
-                        Shared with one vetted companion. Promotes socialization and daily interactions.
+                        {t.detail.twinDesc}
                       </p>
                       <ul className="text-[11px] text-slate-600 space-y-1 pt-1">
                         <li className="flex items-center gap-1.5">
                           <Check className="w-3 h-3 text-emerald-600" />
-                          <span>Individual Bed & Storage</span>
+                          <span>{t.detail.twinFeature1}</span>
                         </li>
                         <li className="flex items-center gap-1.5">
                           <Check className="w-3 h-3 text-emerald-600" />
-                          <span>Wheelchair Accessible Toilet</span>
+                          <span>{t.detail.twinFeature2}</span>
                         </li>
                         <li className="flex items-center gap-1.5">
                           <Check className="w-3 h-3 text-emerald-600" />
-                          <span>Daily Sanitization</span>
+                          <span>{t.detail.twinFeature3}</span>
                         </li>
                       </ul>
                     </div>
                     <div className="pt-2 border-t border-slate-100">
-                      <span className="text-[10px] text-slate-400 block font-semibold">Monthly Package:</span>
+                      <span className="text-[10px] text-slate-400 block font-semibold">{t.detail.monthlyPackage}</span>
                       <span className="text-base font-black text-slate-900 flex items-center">
                         <IndianRupee className="w-3.5 h-3.5 text-[#E86A33]" />
                         {facility.pricing.independentLiving?.from || 15000} - {facility.pricing.independentLiving?.to || 19000}
@@ -465,31 +467,31 @@ export default function FacilityDetailPage() {
                   <div className="p-4 rounded-2xl border border-purple-200 bg-purple-50/20 flex flex-col justify-between space-y-3">
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-black text-slate-900">Bedridden / ICU Care</span>
+                        <span className="text-xs font-black text-slate-900">{t.detail.icuCare}</span>
                         <span className="text-[10px] font-bold px-1.5 py-0.5 bg-purple-100 text-purple-800 rounded">
-                          CRITICAL
+                          {t.detail.critical}
                         </span>
                       </div>
                       <p className="text-[11px] text-slate-500">
-                        Motorized hospital bed, catheter, ryle tube feeding, air mattress & 24/7 dedicated bedside nursing.
+                        {t.detail.icuDesc}
                       </p>
                       <ul className="text-[11px] text-slate-600 space-y-1 pt-1">
                         <li className="flex items-center gap-1.5">
                           <Check className="w-3 h-3 text-emerald-600" />
-                          <span>Motorized 3-Function Bed</span>
+                          <span>{t.detail.icuFeature1}</span>
                         </li>
                         <li className="flex items-center gap-1.5">
                           <Check className="w-3 h-3 text-emerald-600" />
-                          <span>Continuous Vital Monitoring</span>
+                          <span>{t.detail.icuFeature2}</span>
                         </li>
                         <li className="flex items-center gap-1.5">
                           <Check className="w-3 h-3 text-emerald-600" />
-                          <span>Oxygen Concentrator Support</span>
+                          <span>{t.detail.icuFeature3}</span>
                         </li>
                       </ul>
                     </div>
                     <div className="pt-2 border-t border-purple-200/60">
-                      <span className="text-[10px] text-slate-400 block font-semibold">Monthly Package:</span>
+                      <span className="text-[10px] text-slate-400 block font-semibold">{t.detail.monthlyPackage}</span>
                       <span className="text-base font-black text-slate-900 flex items-center">
                         <IndianRupee className="w-3.5 h-3.5 text-[#E86A33]" />
                         {facility.pricing.palliativeCare?.from || 25000} - {facility.pricing.palliativeCare?.to || 35000}
@@ -504,18 +506,18 @@ export default function FacilityDetailPage() {
               <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-5">
                 <div className="flex items-center gap-2 text-xs font-extrabold text-[#E86A33] uppercase tracking-wider">
                   <Hospital className="w-4 h-4" />
-                  <span>Clinical Infrastructure</span>
+                  <span>{t.detail.clinicalBadge}</span>
                 </div>
-                <h3 className="text-lg font-black text-slate-900">Medical Facilities & Care Protocols</h3>
+                <h3 className="text-lg font-black text-slate-900">{t.detail.medicalTitle}</h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
                   {[
-                    { label: 'Doctor Visits & Health Checkups', active: facility.medical.doctorVisits, desc: 'Regular visits by geriatric physicians and emergency on-call doctors.' },
-                    { label: '24/7 Qualified Nursing Staff', active: facility.medical.nursingCare, desc: 'Trained GNM/B.Sc nurses for medicine administration and vitals checking.' },
-                    { label: 'Emergency ICU Hospital Tie-up', active: facility.medical.emergencyCare, desc: 'Priority admission protocol with nearby multi-speciality hospital.' },
-                    { label: 'Physiotherapy & Mobility Lounge', active: facility.medical.physiotherapy, desc: 'Daily gentle exercises, pain relief, and gait rehabilitation.' },
-                    { label: 'Dementia & Alzheimer’s Care', active: facility.services.dementiaCare, desc: 'Safe wander-guard memory care environment with cognitive stimulation.' },
-                    { label: 'Emergency Ambulance on Standby', active: true, desc: 'Rapid transit equipped with oxygen and basic life support kit.' },
+                    { label: t.detail.docVisitsTitle, active: facility.medical.doctorVisits, desc: t.detail.docVisitsDesc },
+                    { label: t.detail.nursingTitle, active: facility.medical.nursingCare, desc: t.detail.nursingDesc },
+                    { label: t.detail.icuTieupTitle, active: facility.medical.emergencyCare, desc: t.detail.icuTieupDesc },
+                    { label: t.detail.physioTitle, active: facility.medical.physiotherapy, desc: t.detail.physioDesc },
+                    { label: t.detail.dementiaTitle, active: facility.services.dementiaCare, desc: t.detail.dementiaDesc },
+                    { label: t.detail.ambulanceTitle, active: true, desc: t.detail.ambulanceDesc },
                   ].map((item, i) => (
                     <div
                       key={i}
@@ -541,33 +543,33 @@ export default function FacilityDetailPage() {
               <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-4">
                 <div className="flex items-center gap-2 text-xs font-extrabold text-[#E86A33] uppercase tracking-wider">
                   <Coffee className="w-4 h-4" />
-                  <span>Diet & Daily Community</span>
+                  <span>{t.detail.dietBadge}</span>
                 </div>
-                <h3 className="text-lg font-black text-slate-900">Food, Nutrition & Lifestyle Routine</h3>
+                <h3 className="text-lg font-black text-slate-900">{t.detail.dietTitle}</h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  Food is prepared fresh daily under the supervision of a clinical nutritionist. Specialized menus are available for residents with diabetes, hypertension, and swallowing difficulties.
+                  {t.detail.dietDesc}
                 </p>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-1">
                   <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-center">
                     <span className="text-lg">🥗</span>
-                    <span className="font-bold text-slate-800 block mt-1">Pure Veg Meals</span>
-                    <span className="text-[10px] text-slate-400">4 times a day</span>
+                    <span className="font-bold text-slate-800 block mt-1">{t.detail.pureVeg}</span>
+                    <span className="text-[10px] text-slate-400">{t.detail.fourTimes}</span>
                   </div>
                   <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-center">
                     <span className="text-lg">🧘</span>
-                    <span className="font-bold text-slate-800 block mt-1">Morning Yoga</span>
-                    <span className="text-[10px] text-slate-400">Gentle stretching</span>
+                    <span className="font-bold text-slate-800 block mt-1">{t.detail.yoga}</span>
+                    <span className="text-[10px] text-slate-400">{t.detail.yogaDesc}</span>
                   </div>
                   <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-center">
                     <span className="text-lg">🪔</span>
-                    <span className="font-bold text-slate-800 block mt-1">Prayer & Bhajan</span>
-                    <span className="text-[10px] text-slate-400">Spiritual wellbeing</span>
+                    <span className="font-bold text-slate-800 block mt-1">{t.detail.prayer}</span>
+                    <span className="text-[10px] text-slate-400">{t.detail.prayerDesc}</span>
                   </div>
                   <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-center">
                     <span className="text-lg">🌳</span>
-                    <span className="font-bold text-slate-800 block mt-1">Walking Garden</span>
-                    <span className="text-[10px] text-slate-400">Anti-skid paths</span>
+                    <span className="font-bold text-slate-800 block mt-1">{t.detail.garden}</span>
+                    <span className="text-[10px] text-slate-400">{t.detail.gardenDesc}</span>
                   </div>
                 </div>
               </div>
@@ -576,9 +578,9 @@ export default function FacilityDetailPage() {
               <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-4">
                 <div className="flex items-center gap-2 text-xs font-extrabold text-[#E86A33] uppercase tracking-wider">
                   <MapPin className="w-4 h-4" />
-                  <span>Neighborhood Context</span>
+                  <span>{t.detail.locationBadge}</span>
                 </div>
-                <h3 className="text-lg font-black text-slate-900">Location & Vicinity Landmarks</h3>
+                <h3 className="text-lg font-black text-slate-900">{t.detail.locationTitle}</h3>
                 <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
                   <div>
                     <span className="font-bold text-slate-800 block">{facility.address}</span>
@@ -590,7 +592,7 @@ export default function FacilityDetailPage() {
                     rel="noreferrer"
                     className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white border border-slate-200 hover:border-[#E86A33] text-slate-700 hover:text-[#E86A33] font-bold text-xs shadow-2xs transition-all cursor-pointer shrink-0"
                   >
-                    <span>Open in Google Maps</span>
+                    <span>{t.detail.openMaps}</span>
                     <ExternalLink className="w-3.5 h-3.5" />
                   </a>
                 </div>
@@ -604,16 +606,16 @@ export default function FacilityDetailPage() {
                 <div className="flex items-baseline justify-between pb-4 border-b border-slate-100">
                   <div>
                     <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                      Starting Monthly Fee
+                      {t.detail.startingFee}
                     </span>
                     <div className="flex items-center text-2xl font-black text-slate-900 tracking-tight">
                       <IndianRupee className="w-5 h-5 text-[#E86A33]" />
                       <span>{facility.startingPrice.toLocaleString('en-IN')}</span>
-                      <span className="text-xs text-slate-400 font-semibold ml-1">/ month</span>
+                      <span className="text-xs text-slate-400 font-semibold ml-1">{t.detail.perMonth}</span>
                     </div>
                   </div>
                   <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-extrabold">
-                    Zero Brokerage
+                    {t.detail.zeroBrokerage}
                   </span>
                 </div>
 
@@ -631,7 +633,7 @@ export default function FacilityDetailPage() {
                         : 'text-slate-500 hover:text-slate-800'
                     }`}
                   >
-                    Schedule Free Visit
+                    {t.detail.scheduleVisitTab}
                   </button>
                   <button
                     type="button"
@@ -645,7 +647,7 @@ export default function FacilityDetailPage() {
                         : 'text-slate-500 hover:text-slate-800'
                     }`}
                   >
-                    Reserve Bed
+                    {t.detail.reserveBedTab}
                   </button>
                 </div>
 
@@ -656,10 +658,10 @@ export default function FacilityDetailPage() {
                       <CheckCircle2 className="w-6 h-6" />
                     </div>
                     <h4 className="font-black text-slate-900 text-base">
-                      {bookingTab === 'visit' ? 'Visit Tour Booked!' : 'Reservation Request Sent!'}
+                      {bookingTab === 'visit' ? t.detail.visitBookedTitle : t.detail.reserveSentTitle}
                     </h4>
                     <p className="text-xs text-slate-500 leading-relaxed">
-                      Reference Code: <b className="font-mono text-slate-800">{inquirySuccessCode}</b>. Our senior care team will coordinate with you shortly.
+                      {t.detail.refCode} <b className="font-mono text-slate-800">{inquirySuccessCode}</b>. {t.detail.bookingSuccessDesc}
                     </p>
                     <a
                       href={whatsappUrl}
@@ -668,18 +670,18 @@ export default function FacilityDetailPage() {
                       className="inline-flex items-center justify-center gap-1.5 w-full py-2.5 px-4 rounded-full bg-[#25D366] text-white text-xs font-bold shadow-xs hover:bg-[#20ba59] transition-all"
                     >
                       <MessageCircle className="w-4 h-4 fill-white stroke-none" />
-                      <span>Connect with Manager on WhatsApp</span>
+                      <span>{t.detail.whatsappManager}</span>
                     </a>
                   </div>
                 ) : (
                   <form onSubmit={handleInquirySubmit} className="space-y-3.5 text-xs">
                     {/* Visitor Name */}
                     <div>
-                      <label className="font-bold text-slate-700 block mb-1">Your Name</label>
+                      <label className="font-bold text-slate-700 block mb-1">{t.detail.yourName}</label>
                       <input
                         type="text"
                         required
-                        placeholder="e.g. Anand Deshmukh"
+                        placeholder={t.detail.namePlaceholder}
                         value={visitorName}
                         onChange={(e) => setVisitorName(e.target.value)}
                         className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#E86A33]/20 focus:border-[#E86A33]"
@@ -688,11 +690,11 @@ export default function FacilityDetailPage() {
 
                     {/* Visitor Phone */}
                     <div>
-                      <label className="font-bold text-slate-700 block mb-1">Mobile Number</label>
+                      <label className="font-bold text-slate-700 block mb-1">{t.detail.mobileNumber}</label>
                       <input
                         type="tel"
                         required
-                        placeholder="10-digit mobile number"
+                        placeholder={t.detail.phonePlaceholder}
                         value={visitorPhone}
                         onChange={(e) => setVisitorPhone(e.target.value)}
                         className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#E86A33]/20 focus:border-[#E86A33]"
@@ -704,7 +706,7 @@ export default function FacilityDetailPage() {
                         {/* Visit Date & Time */}
                         <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <label className="font-bold text-slate-700 block mb-1">Visit Date</label>
+                            <label className="font-bold text-slate-700 block mb-1">{t.detail.visitDate}</label>
                             <input
                               type="date"
                               required
@@ -715,15 +717,15 @@ export default function FacilityDetailPage() {
                             />
                           </div>
                           <div>
-                            <label className="font-bold text-slate-700 block mb-1">Time Slot</label>
+                            <label className="font-bold text-slate-700 block mb-1">{t.detail.timeSlot}</label>
                             <select
                               value={timeSlot}
                               onChange={(e) => setTimeSlot(e.target.value)}
                               className="w-full px-2 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#E86A33]/20 focus:border-[#E86A33]"
                             >
-                              <option value="Morning">Morning (10-1)</option>
-                              <option value="Afternoon">Afternoon (2-5)</option>
-                              <option value="Evening">Evening (5-7)</option>
+                              <option value="Morning">{t.detail.slotMorning}</option>
+                              <option value="Afternoon">{t.detail.slotAfternoon}</option>
+                              <option value="Evening">{t.detail.slotEvening}</option>
                             </select>
                           </div>
                         </div>
@@ -733,27 +735,27 @@ export default function FacilityDetailPage() {
                         {/* Care & Room Choice */}
                         <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <label className="font-bold text-slate-700 block mb-1">Care Level</label>
+                            <label className="font-bold text-slate-700 block mb-1">{t.detail.careLevel}</label>
                             <select
                               value={careLevel}
                               onChange={(e) => setCareLevel(e.target.value)}
                               className="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#E86A33]/20 focus:border-[#E86A33]"
                             >
-                              <option value="Independent">Independent</option>
-                              <option value="Assisted Living">Assisted</option>
-                              <option value="Palliative">Bedridden</option>
+                              <option value="Independent">{t.detail.careIndependent}</option>
+                              <option value="Assisted Living">{t.detail.careAssisted}</option>
+                              <option value="Palliative">{t.detail.careBedridden}</option>
                             </select>
                           </div>
                           <div>
-                            <label className="font-bold text-slate-700 block mb-1">Room Preference</label>
+                            <label className="font-bold text-slate-700 block mb-1">{t.detail.roomPreference}</label>
                             <select
                               value={roomChoice}
                               onChange={(e) => setRoomChoice(e.target.value)}
                               className="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#E86A33]/20 focus:border-[#E86A33]"
                             >
-                              <option value="Private Suite">Private Suite</option>
-                              <option value="Twin Sharing">Twin Sharing</option>
-                              <option value="ICU Ward">ICU Bed</option>
+                              <option value="Private Suite">{t.detail.roomPrivate}</option>
+                              <option value="Twin Sharing">{t.detail.roomTwin}</option>
+                              <option value="ICU Ward">{t.detail.roomIcu}</option>
                             </select>
                           </div>
                         </div>
@@ -768,10 +770,10 @@ export default function FacilityDetailPage() {
                         className="w-full py-3 px-4 rounded-full bg-[#E86A33] hover:bg-[#D85820] active:scale-98 text-white text-xs font-black uppercase tracking-wider shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-50"
                       >
                         {isSubmittingInquiry
-                          ? 'Submitting Request...'
+                          ? t.detail.submittingBtn
                           : bookingTab === 'visit'
-                          ? 'Confirm Free Guided Tour ↗'
-                          : 'Inquire for Room Allotment ↗'}
+                          ? t.detail.confirmTourBtn
+                          : t.detail.inquireRoomBtn}
                       </button>
                     </div>
                   </form>
@@ -786,7 +788,7 @@ export default function FacilityDetailPage() {
                     className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-full bg-slate-50 hover:bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold transition-all cursor-pointer"
                   >
                     <MessageCircle className="w-4 h-4 text-[#25D366] fill-[#25D366]" />
-                    <span>WhatsApp Senior Care Counselor</span>
+                    <span>{t.detail.whatsappCounselor}</span>
                   </a>
 
                   <a
@@ -794,7 +796,7 @@ export default function FacilityDetailPage() {
                     className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-full bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold transition-all"
                   >
                     <PhoneCall className="w-3.5 h-3.5 text-[#E86A33]" />
-                    <span>Call Helpline: +91 93714 58326</span>
+                    <span>{t.detail.callHelpline}</span>
                   </a>
                 </div>
               </div>

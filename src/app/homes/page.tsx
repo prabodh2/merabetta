@@ -7,6 +7,7 @@ import FloatingWhatsApp from '@/components/public/FloatingWhatsApp';
 import FacilityCard from '@/components/homes/FacilityCard';
 import ScheduleVisitModal from '@/components/homes/ScheduleVisitModal';
 import { PublicFacility } from '@/utils/publicHomes';
+import { useLanguage } from '@/i18n/LanguageContext';
 import {
   Search,
   MapPin,
@@ -24,6 +25,7 @@ import {
 } from 'lucide-react';
 
 export default function SeniorLivingDirectoryPage() {
+  const { t, language } = useLanguage();
   const [facilities, setFacilities] = useState<PublicFacility[]>([]);
   const [availableCities, setAvailableCities] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -119,30 +121,30 @@ export default function SeniorLivingDirectoryPage() {
             <div className="relative z-10 max-w-3xl space-y-4">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md text-[#E86A33] text-xs font-black shadow-xs uppercase tracking-wider">
                 <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <span>Verified Senior Care & Assisted Living Directory</span>
+                <span>{t.directory.hero.badge}</span>
               </div>
 
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#1E232F] tracking-tight leading-[1.15]">
-                Dignified Senior Living, <br />
-                <span className="text-[#E86A33]">Delivered with Care</span>
+                {t.directory.hero.titlePart1} <br />
+                <span className="text-[#E86A33]">{t.directory.hero.titlePart2}</span>
               </h1>
 
               <p className="text-sm sm:text-base text-slate-700 leading-relaxed font-normal max-w-2xl">
-                Explore 100% verified old age homes, assisted living suites, and palliative care facilities across Maharashtra with transparent monthly pricing, 24/7 doctor supervision, and free guided tours.
+                {t.directory.hero.subtitle}
               </p>
 
               <div className="pt-2 flex flex-wrap items-center gap-3 text-xs font-bold text-slate-700">
                 <span className="flex items-center gap-1.5 bg-white/80 px-3 py-1.5 rounded-full shadow-2xs">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                  Direct Hospital & Doctor Tie-ups
+                  {t.directory.hero.tagHospital}
                 </span>
                 <span className="flex items-center gap-1.5 bg-white/80 px-3 py-1.5 rounded-full shadow-2xs">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                  Pure Veg & Custom Nutrition
+                  {t.directory.hero.tagFood}
                 </span>
                 <span className="flex items-center gap-1.5 bg-white/80 px-3 py-1.5 rounded-full shadow-2xs">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                  Free In-Person Visit Scheduling
+                  {t.directory.hero.tagVisits}
                 </span>
               </div>
             </div>
@@ -156,7 +158,7 @@ export default function SeniorLivingDirectoryPage() {
               {/* 1. City Dropdown */}
               <div className="md:col-span-3">
                 <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">
-                  Location / City
+                  {t.directory.search.cityLabel}
                 </label>
                 <div className="relative">
                   <MapPin className="w-4 h-4 text-[#E86A33] absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -165,7 +167,7 @@ export default function SeniorLivingDirectoryPage() {
                     onChange={(e) => setSelectedCity(e.target.value)}
                     className="w-full pl-9 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#E86A33]/20 focus:border-[#E86A33] cursor-pointer"
                   >
-                    <option value="all">All Locations (Maharashtra)</option>
+                    <option value="all">{t.directory.search.allLocations}</option>
                     {availableCities.map((city) => (
                       <option key={city} value={city.toLowerCase()}>
                         {city}
@@ -183,7 +185,7 @@ export default function SeniorLivingDirectoryPage() {
               {/* 2. Care Level Selector */}
               <div className="md:col-span-3">
                 <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">
-                  Care Requirement
+                  {t.directory.search.careLabel}
                 </label>
                 <div className="relative">
                   <HeartPulse className="w-4 h-4 text-[#E86A33] absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -192,11 +194,11 @@ export default function SeniorLivingDirectoryPage() {
                     onChange={(e) => setSelectedCareType(e.target.value)}
                     className="w-full pl-9 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#E86A33]/20 focus:border-[#E86A33] cursor-pointer"
                   >
-                    <option value="all">All Care Types</option>
-                    <option value="assisted">Assisted Living</option>
-                    <option value="palliative">Bedridden / Palliative Care</option>
-                    <option value="independent">Independent Senior Living</option>
-                    <option value="dementia">Dementia / Memory Care</option>
+                    <option value="all">{t.directory.search.allCareTypes}</option>
+                    <option value="assisted">{t.directory.search.careAssisted}</option>
+                    <option value="palliative">{t.directory.search.carePalliative}</option>
+                    <option value="independent">{t.directory.search.careIndependent}</option>
+                    <option value="dementia">{t.directory.search.careDementia}</option>
                   </select>
                 </div>
               </div>
@@ -204,13 +206,13 @@ export default function SeniorLivingDirectoryPage() {
               {/* 3. Search Query / Name */}
               <div className="md:col-span-4">
                 <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">
-                  Facility Name or Locality
+                  {t.directory.search.facilityLabel}
                 </label>
                 <div className="relative">
                   <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
-                    placeholder="Search e.g. Sunshine, Bandra, Baner..."
+                    placeholder={t.directory.search.searchPlaceholder}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-9 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#E86A33]/20 focus:border-[#E86A33]"
@@ -234,7 +236,7 @@ export default function SeniorLivingDirectoryPage() {
                   className="w-full inline-flex items-center justify-center gap-2 py-3 px-5 rounded-full bg-[#E86A33] hover:bg-[#D85820] active:scale-98 text-white text-xs font-black shadow-md hover:shadow-lg transition-all cursor-pointer"
                 >
                   <Search className="w-3.5 h-3.5 stroke-[3]" />
-                  <span>Search</span>
+                  <span>{t.directory.search.searchBtn}</span>
                 </button>
               </div>
             </div>
@@ -243,10 +245,10 @@ export default function SeniorLivingDirectoryPage() {
             <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <span className="text-slate-500 font-semibold whitespace-nowrap">
-                  Max Monthly Budget:
+                  {t.directory.search.budgetLabel}
                 </span>
                 <span className="font-extrabold text-[#E86A33] bg-orange-50 px-2.5 py-1 rounded-lg">
-                  ₹{maxPrice >= 50000 ? '50,000+' : `${maxPrice.toLocaleString('en-IN')}`} / mo
+                  ₹{maxPrice >= 50000 ? '50,000+' : `${maxPrice.toLocaleString('en-IN')}`} {t.directory.search.perMo}
                 </span>
                 <input
                   type="range"
@@ -261,16 +263,16 @@ export default function SeniorLivingDirectoryPage() {
 
               {/* Sort By Dropdown */}
               <div className="flex items-center gap-2 self-end sm:self-auto">
-                <span className="text-slate-400 font-medium">Sort by:</span>
+                <span className="text-slate-400 font-medium">{t.directory.search.sortByLabel}</span>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
                   className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#E86A33] cursor-pointer"
                 >
-                  <option value="rating">Highest Rated ★</option>
-                  <option value="price_asc">Price: Low to High</option>
-                  <option value="price_desc">Price: High to Low</option>
-                  <option value="capacity">Largest Bed Capacity</option>
+                  <option value="rating">{t.directory.search.sortHighestRated}</option>
+                  <option value="price_asc">{t.directory.search.sortPriceAsc}</option>
+                  <option value="price_desc">{t.directory.search.sortPriceDesc}</option>
+                  <option value="capacity">{t.directory.search.sortCapacity}</option>
                 </select>
               </div>
             </div>
@@ -281,7 +283,7 @@ export default function SeniorLivingDirectoryPage() {
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
           <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none text-xs">
             <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px] mr-1 shrink-0">
-              Quick Tags:
+              {t.directory.quickTags.label}
             </span>
 
             <button
@@ -293,7 +295,7 @@ export default function SeniorLivingDirectoryPage() {
               }`}
             >
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>MeraBetta Verified</span>
+              <span>{t.directory.quickTags.verified}</span>
             </button>
 
             <button
@@ -305,7 +307,7 @@ export default function SeniorLivingDirectoryPage() {
               }`}
             >
               <HeartPulse className="w-3.5 h-3.5 text-[#E86A33]" />
-              <span>24/7 Nursing & Doctor</span>
+              <span>{t.directory.quickTags.doctor247}</span>
             </button>
 
             <button
@@ -316,7 +318,7 @@ export default function SeniorLivingDirectoryPage() {
                   : 'bg-white border border-slate-200 text-slate-700 hover:border-slate-400'
               }`}
             >
-              <span>🥗 Pure Veg Meals</span>
+              <span>🥗 {t.directory.quickTags.pureVeg}</span>
             </button>
 
             <button
@@ -327,7 +329,7 @@ export default function SeniorLivingDirectoryPage() {
                   : 'bg-white border border-slate-200 text-slate-700 hover:border-purple-300'
               }`}
             >
-              <span>🛏️ Bedridden Care</span>
+              <span>🛏️ {t.directory.quickTags.bedridden}</span>
             </button>
 
             {(selectedCity !== 'all' || selectedCareType !== 'all' || searchQuery || maxPrice < 50000 || filterVerifiedOnly || filterDoctor247 || filterVegMeals || filterPalliative) && (
@@ -336,7 +338,7 @@ export default function SeniorLivingDirectoryPage() {
                 className="px-3 py-1.5 rounded-full text-slate-500 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 text-xs font-semibold transition-colors cursor-pointer shrink-0 flex items-center gap-1"
               >
                 <X className="w-3 h-3" />
-                <span>Reset Filters</span>
+                <span>{t.directory.listings.resetFilters}</span>
               </button>
             )}
           </div>
@@ -347,17 +349,17 @@ export default function SeniorLivingDirectoryPage() {
           <div>
             <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
               {selectedCity !== 'all'
-                ? `Senior Living Facilities in ${selectedCity.charAt(0).toUpperCase() + selectedCity.slice(1)}`
-                : 'Approved Senior Living Homes in Maharashtra'}
+                ? `${selectedCity.charAt(0).toUpperCase() + selectedCity.slice(1)} • ${t.directory.listings.title}`
+                : t.directory.listings.title}
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Showing <b>{filteredFacilities.length}</b> verified homes with transparent monthly pricing
+              {t.directory.listings.subtitle(filteredFacilities.length)}
             </p>
           </div>
 
           <div className="hidden sm:flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="text-xs font-bold text-slate-600">Active Listing</span>
+            <span className="text-xs font-bold text-slate-600">{t.directory.listings.activeListing}</span>
           </div>
         </section>
 
@@ -387,16 +389,16 @@ export default function SeniorLivingDirectoryPage() {
               <div className="w-16 h-16 bg-orange-50 text-[#E86A33] rounded-full flex items-center justify-center mx-auto shadow-xs">
                 <Building2 className="w-8 h-8" />
               </div>
-              <h3 className="text-lg font-black text-slate-900">No matching facilities found</h3>
+              <h3 className="text-lg font-black text-slate-900">{t.directory.listings.emptyTitle}</h3>
               <p className="text-xs text-slate-500 leading-relaxed">
-                We couldn&apos;t find any approved facilities matching your selected filters. Try resetting the budget slider or selecting a different city.
+                {t.directory.listings.emptySubtitle}
               </p>
               <button
                 type="button"
                 onClick={handleResetFilters}
                 className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-full bg-[#E86A33] hover:bg-[#D85820] text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
               >
-                <span>Clear All Filters</span>
+                <span>{t.directory.listings.resetFilters}</span>
               </button>
             </div>
           ) : (
