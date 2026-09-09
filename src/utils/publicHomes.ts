@@ -161,7 +161,7 @@ export function transformRecordToPublicFacility(
     capacity: parseInt(fd.totalCapacity || '25', 10) || 25,
     currentResidents: parseInt(fd.currentResidents || '18', 10) || 18,
     contactPerson: fd.ownerName || fd.contactPersonName || 'Care Coordinator',
-    contactPhone: fd.ownerPhone || fd.mobileNumber || '+918999188267',
+    contactPhone: fd.ownerPhone || fd.mobileNumber || '+919371458326',
     website: fd.website || '',
     startingPrice,
     priceFormatted: `₹${startingPrice.toLocaleString('en-IN')}`,

@@ -170,7 +170,7 @@ export default function FacilityDetailPage() {
   }
 
   const photos = facility.photos || [];
-  const whatsappUrl = `https://wa.me/918999188267?text=${encodeURIComponent(
+  const whatsappUrl = `https://wa.me/919371458326?text=${encodeURIComponent(
     `Hello MeraBetta Team, I am interested in inquiring about ${facility.name} (${facility.referenceId}) in ${facility.city}. Please share admission details.`
   )}`;
 
@@ -790,11 +790,11 @@ export default function FacilityDetailPage() {
                   </a>
 
                   <a
-                    href="tel:+918999188267"
+                    href="tel:+919371458326"
                     className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-full bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold transition-all"
                   >
                     <PhoneCall className="w-3.5 h-3.5 text-[#E86A33]" />
-                    <span>Call Helpline: +91 89991 88267</span>
+                    <span>Call Helpline: +91 93714 58326</span>
                   </a>
                 </div>
               </div>

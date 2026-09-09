@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   Building2,
   ExternalLink,
+  MessageCircle,
 } from 'lucide-react';
 
 export default function PublicFooter() {
@@ -66,28 +67,26 @@ export default function PublicFooter() {
             </ul>
           </div>
 
-          {/* Partner & Facility Operators */}
+          {/* Why MeraBetta Standards */}
           <div className="space-y-3 text-xs">
             <h4 className="font-bold text-slate-900 uppercase tracking-wider text-xs">
-              For Facility Owners
+              Why MeraBetta
             </h4>
             <ul className="space-y-2">
-              <li>
-                <Link href="/" className="hover:text-[#E86A33] transition-colors font-semibold flex items-center gap-1">
-                  <span>List Your Facility</span>
-                  <ExternalLink className="w-3 h-3" />
-                </Link>
+              <li className="text-slate-600 flex items-center gap-1.5">
+                <span className="text-[#E86A33] font-bold">✓</span> 100% Verified Senior Homes
               </li>
-              <li>
-                <Link href="/admin" className="hover:text-[#E86A33] transition-colors">
-                  Admin Verification Portal
-                </Link>
+              <li className="text-slate-600 flex items-center gap-1.5">
+                <span className="text-[#E86A33] font-bold">✓</span> 24/7 Nursing & Doctor Supervision
               </li>
-              <li>
-                <span className="text-slate-400">Quality Standards</span>
+              <li className="text-slate-600 flex items-center gap-1.5">
+                <span className="text-[#E86A33] font-bold">✓</span> Free Guided Visit Scheduling
               </li>
-              <li>
-                <span className="text-slate-400">Partner Guidelines</span>
+              <li className="text-slate-600 flex items-center gap-1.5">
+                <span className="text-[#E86A33] font-bold">✓</span> Transparent Monthly Fees
+              </li>
+              <li className="text-slate-600 flex items-center gap-1.5">
+                <span className="text-[#E86A33] font-bold">✓</span> Dedicated Care Counselors
               </li>
             </ul>
           </div>
@@ -99,11 +98,20 @@ export default function PublicFooter() {
             </h4>
             <div className="space-y-2">
               <a
-                href="tel:+918999188267"
+                href="https://wa.me/919371458326?text=Hello%20MeraBetta%20Team%2C%20I%20am%20looking%20for%20a%20verified%20senior%20living%20home.%20Please%20guide%20me."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-emerald-700 font-bold hover:text-emerald-800 transition-colors"
+              >
+                <MessageCircle className="w-4 h-4 fill-[#25D366] text-[#25D366]" />
+                <span>WhatsApp: +91 93714 58326</span>
+              </a>
+              <a
+                href="tel:+919371458326"
                 className="flex items-center gap-2 text-slate-900 font-bold hover:text-[#E86A33] transition-colors"
               >
                 <PhoneCall className="w-4 h-4 text-[#E86A33]" />
-                <span>+91 89991 88267</span>
+                <span>+91 93714 58326</span>
               </a>
               <a
                 href="mailto:support@merabetta.com"

@@ -17,7 +17,7 @@ export default function FloatingWhatsApp({
     : `Hello MeraBetta Team, I am looking for a trusted senior living / old age home facility for my family. Please assist me.`;
 
   const message = encodeURIComponent(customMessage || defaultText);
-  const whatsappUrl = `https://wa.me/918999188267?text=${message}`;
+  const whatsappUrl = `https://wa.me/919371458326?text=${message}`;
 
   return (
     <div className="fixed bottom-6 right-6 z-50 animate-bounce-subtle">
