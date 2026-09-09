@@ -9,7 +9,6 @@ import {
   X,
   PhoneCall,
   ChevronRight,
-  MessageCircle,
 } from 'lucide-react';
 
 export default function PublicNavbar() {
@@ -22,9 +21,6 @@ export default function PublicNavbar() {
     { label: 'Palliative Care', href: '/homes?careType=palliative', isCurrent: false },
     { label: 'Dementia Care', href: '/homes?careType=dementia', isCurrent: false },
   ];
-
-  const whatsappHref =
-    'https://wa.me/919371458326?text=Hello%20MeraBetta%20Team%2C%20I%20am%20looking%20for%20a%20verified%20senior%20living%20home.%20Please%20guide%20me.';
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs transition-all">
@@ -58,40 +54,19 @@ export default function PublicNavbar() {
           ))}
         </nav>
 
-        {/* Action Buttons: Direct Helpline & WhatsApp Consultation */}
+        {/* Helpline Contact */}
         <div className="hidden sm:flex items-center gap-3">
           <a
-            href="tel:+919371458326"
-            className="hidden xl:inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-[#E86A33] transition-colors"
+            href="tel:+918999188267"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-[#E86A33] transition-colors"
           >
             <PhoneCall className="w-3.5 h-3.5 text-[#E86A33]" />
-            <span>24/7 Helpline: +91 93714 58326</span>
-          </a>
-
-          {/* WhatsApp Action Button */}
-          <a
-            href={whatsappHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#25D366] hover:bg-[#20ba59] active:scale-98 text-white text-xs font-bold shadow-xs hover:shadow-md transition-all cursor-pointer group"
-          >
-            <MessageCircle className="w-4 h-4 fill-white stroke-none" />
-            <span>Chat on WhatsApp</span>
+            <span>24/7 Helpline: 89991 88267</span>
           </a>
         </div>
 
-        {/* Mobile Action Controls */}
+        {/* Mobile Hamburger Toggle */}
         <div className="flex md:hidden items-center gap-2">
-          <a
-            href={whatsappHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#25D366] text-white text-[11px] font-bold shadow-xs"
-          >
-            <MessageCircle className="w-3.5 h-3.5 fill-white stroke-none" />
-            <span>WhatsApp</span>
-          </a>
-
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -126,22 +101,11 @@ export default function PublicNavbar() {
 
           <div className="pt-3 border-t border-slate-100 space-y-2.5">
             <a
-              href="tel:+919371458326"
+              href="tel:+918999188267"
               className="flex items-center gap-2 text-xs font-semibold text-slate-600 px-3 py-2 bg-slate-50 rounded-lg"
             >
               <PhoneCall className="w-4 h-4 text-[#E86A33]" />
-              <span>Senior Care Helpline: +91 93714 58326</span>
-            </a>
-
-            <a
-              href={whatsappHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setMobileMenuOpen(false)}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-full bg-[#25D366] hover:bg-[#20ba59] text-white text-xs font-bold shadow-sm transition-all"
-            >
-              <MessageCircle className="w-4 h-4 fill-white stroke-none" />
-              <span>Chat on WhatsApp</span>
+              <span>Senior Care Helpline: +91 89991 88267</span>
             </a>
           </div>
         </div>
