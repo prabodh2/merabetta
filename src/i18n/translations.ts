@@ -388,7 +388,7 @@ const translations = {
     // ── Facility Profile / Detail Page ───────────────────────────────────────
     detail: {
       breadcrumbs: {
-        homes: 'Homes Directory',
+        homes: 'Homes',
       },
       share: 'Share',
       copied: 'Link Copied!',
@@ -870,7 +870,7 @@ const translations = {
     // ── Facility Profile / Detail Page ───────────────────────────────────────
     detail: {
       breadcrumbs: {
-        homes: 'वृद्धाश्रम निर्देशिका',
+        homes: 'होम्स',
       },
       share: 'शेअर करा',
       copied: 'लिंक कॉपी झाली!',
@@ -1352,7 +1352,7 @@ const translations = {
     // ── Facility Profile / Detail Page ───────────────────────────────────────
     detail: {
       breadcrumbs: {
-        homes: 'वृद्धाश्रम निर्देशिका',
+        homes: 'होम्स',
       },
       share: 'शेयर करें',
       copied: 'लिंक कॉपी हो गया!',

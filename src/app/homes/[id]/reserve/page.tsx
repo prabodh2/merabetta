@@ -138,7 +138,7 @@ export default function ReservePage() {
         <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
           {/* Breadcrumb */}
           <div className="mb-6 flex items-center gap-2 text-xs font-medium text-slate-500">
-            <Link href="/homes" className="hover:text-[#E86A33] transition-colors">Homes Directory</Link>
+            <Link href="/homes" className="hover:text-[#E86A33] transition-colors">Homes</Link>
             <span>/</span>
             <Link href={`/homes?city=${facility.city}`} className="hover:text-[#E86A33] transition-colors">{facility.city}</Link>
             <span>/</span>

@@ -43,7 +43,7 @@ function PaymentContent() {
         {/* Breadcrumb */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
-            <Link href="/directory" className="hover:text-[#E86A33] transition-colors">Homes Directory</Link>
+            <Link href="/homes" className="hover:text-[#E86A33] transition-colors">Homes</Link>
             <span>/</span>
             <span className="text-slate-800">Payment</span>
           </div>
