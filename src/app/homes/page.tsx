@@ -6,6 +6,7 @@ import PublicFooter from '@/components/public/PublicFooter';
 import FloatingWhatsApp from '@/components/public/FloatingWhatsApp';
 import FacilityCard from '@/components/homes/FacilityCard';
 import ScheduleVisitModal from '@/components/homes/ScheduleVisitModal';
+import CompareBar from '@/components/homes/CompareBar';
 import { PublicFacility } from '@/utils/publicHomes';
 import { useLanguage } from '@/i18n/LanguageContext';
 import {
@@ -22,6 +23,9 @@ import {
   RefreshCw,
   PhoneCall,
   X,
+  Star,
+  Award,
+  Shield,
 } from 'lucide-react';
 
 export default function SeniorLivingDirectoryPage() {
@@ -46,6 +50,21 @@ export default function SeniorLivingDirectoryPage() {
   // Visit Modal State
   const [modalFacility, setModalFacility] = useState<PublicFacility | null>(null);
   const [isVisitModalOpen, setIsVisitModalOpen] = useState<boolean>(false);
+
+  // Compare State
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+
+  const handleToggleCompare = useCallback((facilityId: string) => {
+    setCompareIds((prev) => {
+      if (prev.includes(facilityId)) return prev.filter((id) => id !== facilityId);
+      if (prev.length >= 3) return prev; // Max 3
+      return [...prev, facilityId];
+    });
+  }, []);
+
+  const handleClearCompare = useCallback(() => {
+    setCompareIds([]);
+  }, []);
 
   // Fetch approved homes from API
   const fetchHomes = useCallback(async () => {
@@ -111,49 +130,150 @@ export default function SeniorLivingDirectoryPage() {
         {/* Navigation Bar */}
         <PublicNavbar />
 
-        {/* ── HERO BANNER: Brand Lilac Frame (#EBE6F8) ── */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-4">
-          <div className="bg-[#EBE6F8] rounded-3xl sm:rounded-[2.5rem] p-6 sm:p-10 lg:p-12 relative overflow-hidden border border-purple-100/60 shadow-xs">
-            {/* Background Decorative Rings */}
-            <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-white/40 pointer-events-none blur-2xl" />
-            <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-orange-100/50 pointer-events-none blur-2xl" />
+        {/* ── HERO BANNER: High-Trust Split Hero with Ambient Warm Gradient ── */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-4">
+          <div className="bg-gradient-to-br from-[#FFF7F2] via-[#FBF7FF] to-[#F3EEFF] rounded-3xl sm:rounded-[2.5rem] p-6 sm:p-10 lg:p-12 relative overflow-hidden border border-orange-100/80 shadow-sm">
+            {/* Background Ambient Glow Orbs */}
+            <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-gradient-to-br from-orange-200/40 to-amber-100/30 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-gradient-to-tr from-purple-200/40 to-pink-100/30 blur-3xl pointer-events-none" />
 
-            <div className="relative z-10 max-w-3xl space-y-4">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md text-[#E86A33] text-xs font-black shadow-xs uppercase tracking-wider">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <span>{t.directory.hero.badge}</span>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center relative z-10">
+              {/* Left Column: High-Trust Copy + Trust Pillars + Key Stats Strip */}
+              <div className="lg:col-span-7 space-y-5">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/95 backdrop-blur-md text-[#E86A33] border border-orange-200/80 text-xs font-black shadow-2xs uppercase tracking-wider">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                  <span>{t.directory.hero.badge}</span>
+                </div>
+
+                <h1 className="text-3xl sm:text-4xl lg:text-[44px] xl:text-[48px] font-black text-slate-900 tracking-tight leading-[1.12]">
+                  {t.directory.hero.titlePart1} <br />
+                  <span className="bg-gradient-to-r from-[#E86A33] via-[#F2783D] to-[#D85820] bg-clip-text text-transparent">
+                    {t.directory.hero.titlePart2}
+                  </span>
+                </h1>
+
+                <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-normal max-w-2xl">
+                  {t.directory.hero.subtitle}
+                </p>
+
+                {/* Trust Pillars */}
+                <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-700 pt-1">
+                  <span className="flex items-center gap-1.5 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-2xs border border-slate-200/60">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    {t.directory.hero.tagHospital}
+                  </span>
+                  <span className="flex items-center gap-1.5 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-2xs border border-slate-200/60">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    {t.directory.hero.tagFood}
+                  </span>
+                  <span className="flex items-center gap-1.5 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-2xs border border-slate-200/60">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    {t.directory.hero.tagVisits}
+                  </span>
+                </div>
+
+                {/* MNC Authority Key Metrics Strip */}
+                <div className="pt-2 grid grid-cols-3 gap-3 max-w-lg">
+                  <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-3 border border-slate-200/70 shadow-2xs">
+                    <p className="text-xl sm:text-2xl font-black text-slate-900 leading-tight">50+</p>
+                    <p className="text-[11px] font-semibold text-slate-500">Verified Homes in MH</p>
+                  </div>
+                  <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-3 border border-slate-200/70 shadow-2xs">
+                    <p className="text-xl sm:text-2xl font-black text-[#E86A33] leading-tight flex items-center gap-1">
+                      <span>4.9</span>
+                      <Star className="w-4 h-4 fill-amber-400 text-amber-500 inline" />
+                    </p>
+                    <p className="text-[11px] font-semibold text-slate-500">2,400+ Families Trust</p>
+                  </div>
+                  <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-3 border border-slate-200/70 shadow-2xs">
+                    <p className="text-xl sm:text-2xl font-black text-emerald-700 leading-tight">₹0</p>
+                    <p className="text-[11px] font-semibold text-slate-500">Zero Brokerage Fee</p>
+                  </div>
+                </div>
               </div>
 
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#1E232F] tracking-tight leading-[1.15]">
-                {t.directory.hero.titlePart1} <br />
-                <span className="text-[#E86A33]">{t.directory.hero.titlePart2}</span>
-              </h1>
+              {/* Right Column: Emotional Care Photo Collage with Live Trust Badges */}
+              <div className="lg:col-span-5 relative hidden lg:block">
+                {/* Main Hero Photo */}
+                <div className="relative rounded-3xl overflow-hidden shadow-xl border-4 border-white aspect-[4/3]">
+                  <img
+                    src="https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=800&q=80"
+                    alt="Compassionate Senior Living Care"
+                    className="w-full h-full object-cover object-center"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+                  <div className="absolute bottom-3 left-4 right-4 text-white">
+                    <p className="text-xs font-black drop-shadow-sm">Compassionate 24/7 Assisted Care</p>
+                    <p className="text-[10px] text-white/90">Dignity, medical security & warmth for your parents</p>
+                  </div>
+                </div>
 
-              <p className="text-sm sm:text-base text-slate-700 leading-relaxed font-normal max-w-2xl">
-                {t.directory.hero.subtitle}
-              </p>
+                {/* Inset Sub-Image */}
+                <div className="absolute -bottom-5 -left-5 w-32 aspect-square rounded-2xl overflow-hidden shadow-xl border-3 border-white">
+                  <img
+                    src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=400&q=80"
+                    alt="Comfortable Senior Suite"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
 
-              <div className="pt-2 flex flex-wrap items-center gap-3 text-xs font-bold text-slate-700">
-                <span className="flex items-center gap-1.5 bg-white/80 px-3 py-1.5 rounded-full shadow-2xs">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                  {t.directory.hero.tagHospital}
-                </span>
-                <span className="flex items-center gap-1.5 bg-white/80 px-3 py-1.5 rounded-full shadow-2xs">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                  {t.directory.hero.tagFood}
-                </span>
-                <span className="flex items-center gap-1.5 bg-white/80 px-3 py-1.5 rounded-full shadow-2xs">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                  {t.directory.hero.tagVisits}
-                </span>
+                {/* Floating Badge 1: Top Right */}
+                <div className="absolute -top-3 -right-3 bg-white/95 backdrop-blur-md rounded-2xl p-2.5 shadow-lg border border-slate-100 flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black text-xs">
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-black text-slate-900 leading-tight">Fire & Medical NOC</p>
+                    <p className="text-[9px] font-semibold text-emerald-700">100% On-Site Audited</p>
+                  </div>
+                </div>
+
+                {/* Floating Badge 2: Bottom Right */}
+                <div className="absolute -bottom-4 -right-2 bg-white/95 backdrop-blur-md rounded-2xl p-2.5 shadow-lg border border-slate-100 flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-orange-50 text-[#E86A33] flex items-center justify-center font-black text-xs">
+                    <HeartPulse className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-black text-slate-900 leading-tight">Doctor On-Call</p>
+                    <p className="text-[9px] font-semibold text-slate-500">ICU & Emergency Tie-up</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ── FLOATING OYO-STYLE SEARCH & FILTER BAR ── */}
+        {/* ── ELEVATED SEARCH & DISCOVERY BAR ── */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 sm:-mt-8 relative z-20">
-          <div className="bg-white rounded-3xl p-4 sm:p-5 shadow-xl border border-slate-200/90 space-y-4">
+          <div className="bg-white rounded-3xl p-4 sm:p-6 shadow-xl shadow-slate-900/5 border border-slate-200/90 space-y-4">
+            {/* Quick Category Intent Tabs */}
+            <div className="flex items-center gap-1.5 pb-3 border-b border-slate-100 overflow-x-auto scrollbar-none text-xs">
+              <span className="text-slate-400 text-[10px] uppercase font-extrabold tracking-wider mr-1 shrink-0">
+                Care Category:
+              </span>
+              {[
+                { id: 'all', label: 'All Care Types' },
+                { id: 'assisted', label: 'Assisted Living' },
+                { id: 'palliative', label: 'Bedridden / ICU' },
+                { id: 'independent', label: 'Independent Living' },
+                { id: 'dementia', label: 'Dementia Care' },
+              ].map((type) => (
+                <button
+                  key={type.id}
+                  type="button"
+                  onClick={() => setSelectedCareType(type.id)}
+                  className={`px-3 py-1.5 rounded-full transition-all cursor-pointer shrink-0 whitespace-nowrap text-xs font-bold ${
+                    selectedCareType === type.id
+                      ? 'bg-[#E86A33] text-white shadow-xs'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                  }`}
+                >
+                  {type.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Input Controls Grid */}
             <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
               {/* 1. City Dropdown */}
               <div className="md:col-span-3">
@@ -161,11 +281,11 @@ export default function SeniorLivingDirectoryPage() {
                   {t.directory.search.cityLabel}
                 </label>
                 <div className="relative">
-                  <MapPin className="w-4 h-4 text-[#E86A33] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <MapPin className="w-4 h-4 text-[#E86A33] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <select
                     value={selectedCity}
                     onChange={(e) => setSelectedCity(e.target.value)}
-                    className="w-full pl-9 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#E86A33]/20 focus:border-[#E86A33] cursor-pointer"
+                    className="w-full pl-9 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#E86A33]/20 focus:border-[#E86A33] cursor-pointer appearance-none"
                   >
                     <option value="all">{t.directory.search.allLocations}</option>
                     {availableCities.map((city) => (
@@ -188,11 +308,11 @@ export default function SeniorLivingDirectoryPage() {
                   {t.directory.search.careLabel}
                 </label>
                 <div className="relative">
-                  <HeartPulse className="w-4 h-4 text-[#E86A33] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <HeartPulse className="w-4 h-4 text-[#E86A33] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <select
                     value={selectedCareType}
                     onChange={(e) => setSelectedCareType(e.target.value)}
-                    className="w-full pl-9 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#E86A33]/20 focus:border-[#E86A33] cursor-pointer"
+                    className="w-full pl-9 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#E86A33]/20 focus:border-[#E86A33] cursor-pointer appearance-none"
                   >
                     <option value="all">{t.directory.search.allCareTypes}</option>
                     <option value="assisted">{t.directory.search.careAssisted}</option>
@@ -241,7 +361,7 @@ export default function SeniorLivingDirectoryPage() {
               </div>
             </div>
 
-            {/* Budget Range Slider */}
+            {/* Budget Range Slider & Sorting */}
             <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <span className="text-slate-500 font-semibold whitespace-nowrap">
@@ -279,73 +399,8 @@ export default function SeniorLivingDirectoryPage() {
           </div>
         </section>
 
-        {/* ── QUICK FILTER CHIPS BAR ── */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none text-xs">
-            <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px] mr-1 shrink-0">
-              {t.directory.quickTags.label}
-            </span>
-
-            <button
-              onClick={() => setFilterVerifiedOnly(!filterVerifiedOnly)}
-              className={`px-3.5 py-1.5 rounded-full font-bold transition-all cursor-pointer shrink-0 flex items-center gap-1.5 ${
-                filterVerifiedOnly
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'bg-white border border-slate-200 text-slate-700 hover:border-emerald-400'
-              }`}
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>{t.directory.quickTags.verified}</span>
-            </button>
-
-            <button
-              onClick={() => setFilterDoctor247(!filterDoctor247)}
-              className={`px-3.5 py-1.5 rounded-full font-bold transition-all cursor-pointer shrink-0 flex items-center gap-1.5 ${
-                filterDoctor247
-                  ? 'bg-slate-900 text-white shadow-xs'
-                  : 'bg-white border border-slate-200 text-slate-700 hover:border-slate-400'
-              }`}
-            >
-              <HeartPulse className="w-3.5 h-3.5 text-[#E86A33]" />
-              <span>{t.directory.quickTags.doctor247}</span>
-            </button>
-
-            <button
-              onClick={() => setFilterVegMeals(!filterVegMeals)}
-              className={`px-3.5 py-1.5 rounded-full font-bold transition-all cursor-pointer shrink-0 flex items-center gap-1.5 ${
-                filterVegMeals
-                  ? 'bg-slate-900 text-white shadow-xs'
-                  : 'bg-white border border-slate-200 text-slate-700 hover:border-slate-400'
-              }`}
-            >
-              <span>🥗 {t.directory.quickTags.pureVeg}</span>
-            </button>
-
-            <button
-              onClick={() => setFilterPalliative(!filterPalliative)}
-              className={`px-3.5 py-1.5 rounded-full font-bold transition-all cursor-pointer shrink-0 flex items-center gap-1.5 ${
-                filterPalliative
-                  ? 'bg-purple-700 text-white shadow-xs'
-                  : 'bg-white border border-slate-200 text-slate-700 hover:border-purple-300'
-              }`}
-            >
-              <span>🛏️ {t.directory.quickTags.bedridden}</span>
-            </button>
-
-            {(selectedCity !== 'all' || selectedCareType !== 'all' || searchQuery || maxPrice < 50000 || filterVerifiedOnly || filterDoctor247 || filterVegMeals || filterPalliative) && (
-              <button
-                onClick={handleResetFilters}
-                className="px-3 py-1.5 rounded-full text-slate-500 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 text-xs font-semibold transition-colors cursor-pointer shrink-0 flex items-center gap-1"
-              >
-                <X className="w-3 h-3" />
-                <span>{t.directory.listings.resetFilters}</span>
-              </button>
-            )}
-          </div>
-        </section>
-
         {/* ── RESULTS HEADER & COUNT ── */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-2 flex items-center justify-between">
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2 flex items-center justify-between">
           <div>
             <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
               {selectedCity !== 'all'
@@ -357,9 +412,20 @@ export default function SeniorLivingDirectoryPage() {
             </p>
           </div>
 
-          <div className="hidden sm:flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="text-xs font-bold text-slate-600">{t.directory.listings.activeListing}</span>
+          <div className="flex items-center gap-3">
+            {(selectedCity !== 'all' || selectedCareType !== 'all' || searchQuery || maxPrice < 50000) && (
+              <button
+                onClick={handleResetFilters}
+                className="px-3 py-1.5 rounded-full text-slate-500 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1"
+              >
+                <X className="w-3 h-3" />
+                <span>{t.directory.listings.resetFilters}</span>
+              </button>
+            )}
+            <div className="hidden sm:flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="text-xs font-bold text-slate-600">{t.directory.listings.activeListing}</span>
+            </div>
           </div>
         </section>
 
@@ -409,6 +475,9 @@ export default function SeniorLivingDirectoryPage() {
                   key={facility.id || facility.referenceId}
                   facility={facility}
                   onBookVisit={handleOpenVisitModal}
+                  isCompareSelected={compareIds.includes(facility.referenceId || facility.id)}
+                  onToggleCompare={handleToggleCompare}
+                  compareDisabled={compareIds.length >= 3}
                 />
               ))}
             </div>
@@ -424,6 +493,14 @@ export default function SeniorLivingDirectoryPage() {
           setIsVisitModalOpen(false);
           setModalFacility(null);
         }}
+      />
+
+      {/* Compare Bar */}
+      <CompareBar
+        selectedIds={compareIds}
+        facilities={facilities.map((f) => ({ id: f.id, referenceId: f.referenceId, name: f.name }))}
+        onRemove={(id) => setCompareIds((prev) => prev.filter((i) => i !== id))}
+        onClear={handleClearCompare}
       />
 
       {/* Floating WhatsApp CTA */}

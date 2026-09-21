@@ -15,15 +15,19 @@ import {
   CheckCircle2,
   Calendar,
   ExternalLink,
+  GitCompareArrows,
 } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 
 interface FacilityCardProps {
   facility: PublicFacility;
   onBookVisit?: (facility: PublicFacility) => void;
+  isCompareSelected?: boolean;
+  onToggleCompare?: (facilityId: string) => void;
+  compareDisabled?: boolean;
 }
 
-export default function FacilityCard({ facility, onBookVisit }: FacilityCardProps) {
+export default function FacilityCard({ facility, onBookVisit, isCompareSelected, onToggleCompare, compareDisabled }: FacilityCardProps) {
   const [activePhotoIdx, setActivePhotoIdx] = useState(0);
   const { t } = useLanguage();
 
@@ -181,24 +185,45 @@ export default function FacilityCard({ facility, onBookVisit }: FacilityCardProp
         </div>
 
         {/* ── 3. Dual Call to Action Buttons ── */}
-        <div className="pt-3 border-t border-slate-100 flex items-center gap-2">
-          {/* Secondary: Book a Free Visit */}
-          <button
-            type="button"
-            onClick={() => onBookVisit?.(facility)}
-            className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-all cursor-pointer hover:scale-101 active:scale-98"
-          >
-            <Calendar className="w-3.5 h-3.5 text-slate-600" />
-            <span>{t.directory.card.bookVisit}</span>
-          </button>
+        <div className="pt-3 border-t border-slate-100 space-y-2">
+          {/* Compare Toggle */}
+          {onToggleCompare && (
+            <button
+              type="button"
+              onClick={() => onToggleCompare(facility.referenceId || facility.id)}
+              disabled={compareDisabled && !isCompareSelected}
+              className={`w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
+                isCompareSelected
+                  ? 'bg-purple-100 text-purple-800 border border-purple-300 shadow-xs'
+                  : compareDisabled
+                    ? 'bg-slate-50 text-slate-400 border border-slate-100 cursor-not-allowed'
+                    : 'bg-white text-slate-600 border border-slate-200 hover:border-purple-300 hover:text-purple-700'
+              }`}
+            >
+              <GitCompareArrows className="w-3.5 h-3.5" />
+              <span>{isCompareSelected ? '✓ Added to Compare' : 'Add to Compare'}</span>
+            </button>
+          )}
 
-          {/* Primary: View Details */}
-          <Link
-            href={detailUrl}
-            className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full bg-[#E86A33] hover:bg-[#D85820] text-white text-xs font-bold shadow-xs hover:shadow-md transition-all cursor-pointer hover:scale-101 active:scale-98"
-          >
-            <span>{t.directory.card.viewDetails}</span>
-          </Link>
+          <div className="flex items-center gap-2">
+            {/* Secondary: Book a Free Visit */}
+            <button
+              type="button"
+              onClick={() => onBookVisit?.(facility)}
+              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-all cursor-pointer hover:scale-101 active:scale-98"
+            >
+              <Calendar className="w-3.5 h-3.5 text-slate-600" />
+              <span>{t.directory.card.bookVisit}</span>
+            </button>
+
+            {/* Primary: View Details */}
+            <Link
+              href={detailUrl}
+              className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full bg-[#E86A33] hover:bg-[#D85820] text-white text-xs font-bold shadow-xs hover:shadow-md transition-all cursor-pointer hover:scale-101 active:scale-98"
+            >
+              <span>{t.directory.card.viewDetails}</span>
+            </Link>
+          </div>
         </div>
       </div>
     </div>

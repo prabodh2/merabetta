@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter, Noto_Sans_Devanagari } from 'next/font/google';
 import './globals.css';
 import { LanguageProvider } from '../i18n/LanguageContext';
+import { AuthProvider } from '../contexts/AuthContext';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -41,7 +42,7 @@ export default function RootLayout({
         className="min-h-full flex flex-col bg-[#FFF8F3] text-slate-900 selection:bg-[#E86A33] selection:text-white"
         style={{ fontFamily: "var(--font-inter), var(--font-devanagari), sans-serif" }}
       >
-        <LanguageProvider>{children}</LanguageProvider>
+        <LanguageProvider><AuthProvider>{children}</AuthProvider></LanguageProvider>
       </body>
     </html>
   );

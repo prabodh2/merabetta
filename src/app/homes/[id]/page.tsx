@@ -663,6 +663,14 @@ export default function FacilityDetailPage() {
                     <p className="text-xs text-slate-500 leading-relaxed">
                       {t.detail.refCode} <b className="font-mono text-slate-800">{inquirySuccessCode}</b>. {t.detail.bookingSuccessDesc}
                     </p>
+                    {bookingTab === 'reserve' && (
+                      <Link
+                        href={`/payment?facility=${facility.referenceId || facility.id || id}&type=reservation&ref=${inquirySuccessCode}`}
+                        className="inline-flex items-center justify-center gap-1.5 w-full py-2.5 px-4 rounded-full bg-[#E86A33] hover:bg-[#D85820] text-white text-xs font-bold shadow-xs active:scale-98 transition-all"
+                      >
+                        Proceed to Payment (Deposit) →
+                      </Link>
+                    )}
                     <a
                       href={whatsappUrl}
                       target="_blank"
