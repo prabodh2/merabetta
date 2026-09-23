@@ -2,9 +2,12 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-type User = {
+export type User = {
   id: string;
   phone: string;
+  name?: string;
+  isSubscribed?: boolean;
+  subscriptionExpiresAt?: string | null;
 };
 
 interface AuthContextType {
@@ -13,6 +16,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (token: string, user: User) => void;
   logout: () => void;
+  activateSubscription: (expiresAt: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -64,13 +68,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   };
 
+  const activateSubscription = (expiresAt: string) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        isSubscribed: true,
+        subscriptionExpiresAt: expiresAt,
+      };
+    });
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
       isLoggedIn: !!user,
       isLoading,
       login,
-      logout
+      logout,
+      activateSubscription
     }}>
       {children}
     </AuthContext.Provider>

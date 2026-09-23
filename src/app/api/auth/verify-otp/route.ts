@@ -9,7 +9,7 @@ if (!globalStore.sessions) globalStore.sessions = {};
 
 export async function POST(request: NextRequest) {
   try {
-    const { phone, otp } = await request.json();
+    const { phone, otp, name } = await request.json();
 
     if (!phone || !/^\d{10}$/.test(phone) || !otp) {
       return NextResponse.json({ success: false, error: 'Invalid input' }, { status: 400 });
@@ -42,19 +42,30 @@ export async function POST(request: NextRequest) {
 
     const token = crypto.randomUUID();
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
-    let userResponse = null;
+    let userResponse: any = null;
 
     if (!dbError) {
       try {
         const client = await clientPromise;
         const db = client.db();
         
-        let user = await db.collection('users').findOne({ phone });
+        let user: any = await db.collection('users').findOne({ phone });
         if (!user) {
-          const result = await db.collection('users').insertOne({ phone, createdAt: new Date(), lastLoginAt: new Date() });
-          user = { _id: result.insertedId, phone };
+          const newUserDoc: any = {
+            phone,
+            name: name?.trim() || '',
+            isSubscribed: false,
+            subscriptionExpiresAt: null,
+            createdAt: new Date(),
+            lastLoginAt: new Date()
+          };
+          const result = await db.collection('users').insertOne(newUserDoc);
+          user = { ...newUserDoc, _id: result.insertedId };
         } else {
-          await db.collection('users').updateOne({ _id: user._id }, { $set: { lastLoginAt: new Date() } });
+          const updateFields: any = { lastLoginAt: new Date() };
+          if (name?.trim()) updateFields.name = name.trim();
+          await db.collection('users').updateOne({ _id: user._id }, { $set: updateFields });
+          if (name?.trim()) user.name = name.trim();
         }
         
         const userId = user._id.toString();
@@ -66,7 +77,19 @@ export async function POST(request: NextRequest) {
           expiresAt
         });
 
-        userResponse = { id: userId, phone };
+        const isSubscribed = Boolean(
+          user.isSubscribed && 
+          user.subscriptionExpiresAt && 
+          new Date(user.subscriptionExpiresAt) > new Date()
+        );
+
+        userResponse = {
+          id: userId,
+          phone,
+          name: user.name || '',
+          isSubscribed,
+          subscriptionExpiresAt: user.subscriptionExpiresAt || null
+        };
       } catch (err) {
         dbError = true;
       }
@@ -76,10 +99,19 @@ export async function POST(request: NextRequest) {
       // In-memory fallback
       let user = Object.values(globalStore.users).find((u: any) => u.phone === phone) as any;
       if (!user) {
-        user = { id: crypto.randomUUID(), phone, createdAt: new Date(), lastLoginAt: new Date() };
+        user = {
+          id: crypto.randomUUID(),
+          phone,
+          name: name?.trim() || '',
+          isSubscribed: false,
+          subscriptionExpiresAt: null,
+          createdAt: new Date(),
+          lastLoginAt: new Date()
+        };
         globalStore.users[user.id] = user;
       } else {
         user.lastLoginAt = new Date();
+        if (name?.trim()) user.name = name.trim();
       }
       
       globalStore.sessions[token] = {
@@ -89,7 +121,20 @@ export async function POST(request: NextRequest) {
         createdAt: new Date(),
         expiresAt
       };
-      userResponse = { id: user.id, phone };
+
+      const isSubscribed = Boolean(
+        user.isSubscribed && 
+        user.subscriptionExpiresAt && 
+        new Date(user.subscriptionExpiresAt) > new Date()
+      );
+
+      userResponse = {
+        id: user.id,
+        phone,
+        name: user.name || '',
+        isSubscribed,
+        subscriptionExpiresAt: user.subscriptionExpiresAt || null
+      };
     }
 
     return NextResponse.json({ success: true, token, user: userResponse });

@@ -7,6 +7,8 @@ import FloatingWhatsApp from '@/components/public/FloatingWhatsApp';
 import FacilityCard from '@/components/homes/FacilityCard';
 import ScheduleVisitModal from '@/components/homes/ScheduleVisitModal';
 import CompareBar from '@/components/homes/CompareBar';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import { PublicFacility } from '@/utils/publicHomes';
 import { useLanguage } from '@/i18n/LanguageContext';
 import {
@@ -29,10 +31,23 @@ import {
 } from 'lucide-react';
 
 export default function SeniorLivingDirectoryPage() {
+  const router = useRouter();
+  const { user, isLoggedIn, isLoading: authLoading } = useAuth();
   const { t, language } = useLanguage();
   const [facilities, setFacilities] = useState<PublicFacility[]>([]);
   const [availableCities, setAvailableCities] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Check login and subscription status
+  useEffect(() => {
+    if (!authLoading) {
+      if (!isLoggedIn) {
+        router.push('/login');
+      } else if (!user?.isSubscribed) {
+        router.push('/payment');
+      }
+    }
+  }, [authLoading, isLoggedIn, user, router]);
 
   // Filters
   const [selectedCity, setSelectedCity] = useState<string>('all');
@@ -123,6 +138,17 @@ export default function SeniorLivingDirectoryPage() {
     setFilterVegMeals(false);
     setFilterPalliative(false);
   };
+
+  if (authLoading || !isLoggedIn || !user?.isSubscribed) {
+    return (
+      <div className="min-h-screen bg-[#FFFDFB] flex flex-col items-center justify-center space-y-4">
+        <div className="w-12 h-12 border-3 border-orange-200 border-t-[#E86A33] rounded-full animate-spin" />
+        <p className="text-xs font-bold text-slate-500 tracking-wider uppercase">
+          Verifying Directory Access Pass...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#FFFDFB] text-slate-900 flex flex-col justify-between selection:bg-[#E86A33] selection:text-white">

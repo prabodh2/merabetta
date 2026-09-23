@@ -37,15 +37,28 @@ import {
   Info,
 } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function FacilityDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { user, isLoggedIn, isLoading: authLoading } = useAuth();
   const id = params?.id as string;
   const { t, language } = useLanguage();
 
   const [facility, setFacility] = useState<PublicFacility | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Check login and subscription status
+  useEffect(() => {
+    if (!authLoading) {
+      if (!isLoggedIn) {
+        router.push('/login');
+      } else if (!user?.isSubscribed) {
+        router.push('/payment');
+      }
+    }
+  }, [authLoading, isLoggedIn, user, router]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Photo Lightbox
@@ -134,6 +147,17 @@ export default function FacilityDetailPage() {
       setTimeout(() => setCopiedLink(false), 2000);
     }
   };
+
+  if (authLoading || !isLoggedIn || !user?.isSubscribed) {
+    return (
+      <div className="min-h-screen bg-[#FFFDFB] flex flex-col items-center justify-center space-y-4">
+        <div className="w-12 h-12 border-3 border-orange-200 border-t-[#E86A33] rounded-full animate-spin" />
+        <p className="text-xs font-bold text-slate-500 tracking-wider uppercase">
+          Verifying Directory Access Pass...
+        </p>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -663,14 +687,7 @@ export default function FacilityDetailPage() {
                     <p className="text-xs text-slate-500 leading-relaxed">
                       {t.detail.refCode} <b className="font-mono text-slate-800">{inquirySuccessCode}</b>. {t.detail.bookingSuccessDesc}
                     </p>
-                    {bookingTab === 'reserve' && (
-                      <Link
-                        href={`/payment?facility=${facility.referenceId || facility.id || id}&type=reservation&ref=${inquirySuccessCode}`}
-                        className="inline-flex items-center justify-center gap-1.5 w-full py-2.5 px-4 rounded-full bg-[#E86A33] hover:bg-[#D85820] text-white text-xs font-bold shadow-xs active:scale-98 transition-all"
-                      >
-                        Proceed to Payment (Deposit) →
-                      </Link>
-                    )}
+
                     <a
                       href={whatsappUrl}
                       target="_blank"

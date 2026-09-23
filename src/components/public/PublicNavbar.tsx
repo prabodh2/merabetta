@@ -145,12 +145,33 @@ export default function PublicNavbar() {
                   {/* User Info Header */}
                   <div className="px-4 py-3.5 bg-gradient-to-r from-orange-50 to-amber-50/50 border-b border-slate-100">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#E86A33] to-[#D85820] flex items-center justify-center shadow-sm">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#E86A33] to-[#D85820] flex items-center justify-center shadow-sm shrink-0">
                         <User className="w-5 h-5 text-white" />
                       </div>
-                      <div>
-                        <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Logged In As</p>
-                        <p className="text-sm font-bold text-slate-900">+91 {user?.phone?.slice(-10)}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-bold text-slate-900 truncate">
+                          {user?.name || `+91 ${user?.phone?.slice(-10)}`}
+                        </p>
+                        {user?.name && (
+                          <p className="text-[11px] font-semibold text-slate-500 truncate">
+                            +91 {user?.phone?.slice(-10)}
+                          </p>
+                        )}
+                        <div className="mt-1">
+                          {user?.isSubscribed ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full">
+                              ⭐ 6-Month Pass Active
+                            </span>
+                          ) : (
+                            <Link
+                              href="/payment"
+                              onClick={() => setProfileOpen(false)}
+                              className="inline-flex items-center gap-1 text-[10px] font-black text-[#E86A33] bg-orange-100/80 hover:bg-orange-200/80 px-2 py-0.5 rounded-full transition-colors"
+                            >
+                              ⚠️ Activate Pass (₹999)
+                            </Link>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -273,22 +294,45 @@ export default function PublicNavbar() {
             {isLoggedIn ? (
               <>
                 {/* Logged-in user card */}
-                <div className="flex items-center gap-3 px-3 py-3 bg-orange-50/60 rounded-xl border border-orange-100">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#E86A33] to-[#D85820] flex items-center justify-center shadow-sm shrink-0">
-                    <User className="w-4 h-4 text-white" />
+                <div className="p-3 bg-orange-50/60 rounded-2xl border border-orange-100 space-y-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#E86A33] to-[#D85820] flex items-center justify-center shadow-sm shrink-0">
+                      <User className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-slate-900 truncate">
+                        {user?.name || `+91 ${user?.phone?.slice(-10)}`}
+                      </p>
+                      {user?.name && (
+                        <p className="text-[11px] font-semibold text-slate-500 truncate">
+                          +91 {user?.phone?.slice(-10)}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => { logout(); setMobileMenuOpen(false); }}
+                      className="p-2 rounded-lg text-rose-500 hover:bg-rose-50 transition-colors cursor-pointer shrink-0"
+                      aria-label="Logout"
+                    >
+                      <LogOut className="w-4 h-4" />
+                    </button>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Logged In</p>
-                    <p className="text-sm font-bold text-slate-900 truncate">+91 {user?.phone?.slice(-10)}</p>
+                  <div>
+                    {user?.isSubscribed ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-700 bg-emerald-100/80 px-2.5 py-1 rounded-full">
+                        ⭐ 6-Month Pass Active
+                      </span>
+                    ) : (
+                      <Link
+                        href="/payment"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="inline-flex items-center gap-1 text-[10px] font-black text-[#E86A33] bg-orange-100 hover:bg-orange-200 px-2.5 py-1 rounded-full transition-colors"
+                      >
+                        ⚠️ Activate 6-Month Pass (₹999)
+                      </Link>
+                    )}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => { logout(); setMobileMenuOpen(false); }}
-                    className="p-2 rounded-lg text-rose-500 hover:bg-rose-50 transition-colors cursor-pointer shrink-0"
-                    aria-label="Logout"
-                  >
-                    <LogOut className="w-4 h-4" />
-                  </button>
                 </div>
               </>
             ) : (

@@ -37,11 +37,43 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    if (!validSession) {
+    if (!validSession || !userId) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    return NextResponse.json({ success: true, user: { id: userId, phone } });
+    let userDoc: any = null;
+    try {
+      const client = await clientPromise;
+      const db = client.db();
+      const { ObjectId } = await import('mongodb');
+      try {
+        userDoc = await db.collection('users').findOne({ _id: new ObjectId(userId) });
+      } catch {
+        userDoc = await db.collection('users').findOne({ _id: userId });
+      }
+      if (!userDoc) {
+        userDoc = await db.collection('users').findOne({ phone });
+      }
+    } catch {
+      userDoc = globalStore.users[userId] || Object.values(globalStore.users).find((u: any) => u.phone === phone);
+    }
+
+    const isSubscribed = Boolean(
+      userDoc?.isSubscribed && 
+      userDoc?.subscriptionExpiresAt && 
+      new Date(userDoc.subscriptionExpiresAt) > new Date()
+    );
+
+    return NextResponse.json({
+      success: true,
+      user: {
+        id: userId,
+        phone: phone || userDoc?.phone || '',
+        name: userDoc?.name || '',
+        isSubscribed,
+        subscriptionExpiresAt: userDoc?.subscriptionExpiresAt || null,
+      }
+    });
   } catch (error) {
     console.error('Auth me error:', error);
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
