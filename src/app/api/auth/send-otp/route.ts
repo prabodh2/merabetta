@@ -12,10 +12,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Invalid phone number' }, { status: 400 });
     }
 
-    if (process.env.NODE_ENV === 'production') {
-      return NextResponse.json({ success: false, error: 'OTP service not configured yet. Contact support.' }, { status: 400 });
-    }
-
+    // TODO: Replace with real OTP API once company provides it.
+    // Mock OTP is 123456 for all environments until then.
     const otp = '123456';
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
