@@ -35,31 +35,22 @@ import {
   Copy,
   ChevronRight,
   Info,
+  Lock,
+  Sparkles,
 } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function FacilityDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const { user, isLoggedIn, isLoading: authLoading } = useAuth();
   const id = params?.id as string;
   const { t, language } = useLanguage();
 
+  const isSubscribed = isLoggedIn && !!user?.isSubscribed;
+
   const [facility, setFacility] = useState<PublicFacility | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-
-  // Check login and subscription status
-  useEffect(() => {
-    if (!authLoading) {
-      if (!isLoggedIn) {
-        router.push('/login');
-      } else if (!user?.isSubscribed) {
-        router.push('/payment');
-      }
-    }
-  }, [authLoading, isLoggedIn, user, router]);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Photo Lightbox
   const [activePhotoLightboxIdx, setActivePhotoLightboxIdx] = useState<number | null>(null);
@@ -79,6 +70,7 @@ export default function FacilityDetailPage() {
   const [isSubmittingInquiry, setIsSubmittingInquiry] = useState<boolean>(false);
   const [inquirySuccessCode, setInquirySuccessCode] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Fetch Facility
   const fetchFacility = useCallback(async () => {
@@ -148,16 +140,7 @@ export default function FacilityDetailPage() {
     }
   };
 
-  if (authLoading || !isLoggedIn || !user?.isSubscribed) {
-    return (
-      <div className="min-h-screen bg-[#FFFDFB] flex flex-col items-center justify-center space-y-4">
-        <div className="w-12 h-12 border-3 border-orange-200 border-t-[#E86A33] rounded-full animate-spin" />
-        <p className="text-xs font-bold text-slate-500 tracking-wider uppercase">
-          Verifying Directory Access Pass...
-        </p>
-      </div>
-    );
-  }
+
 
   if (isLoading) {
     return (
@@ -326,8 +309,66 @@ export default function FacilityDetailPage() {
           </div>
         </section>
 
-        {/* ── VERIFIED CREDENTIALS TRUST STRIP ── */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+        {/* ── PAYWALL — shown for non-subscribed visitors ── */}
+        {!isSubscribed ? (
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+            <div className="relative">
+              {/* Blurred ghost content */}
+              <div className="blur-sm pointer-events-none select-none opacity-50 space-y-6" aria-hidden="true">
+                <div className="bg-white rounded-3xl border border-slate-200 p-6 h-32" />
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 p-6 h-64" />
+                  <div className="bg-white rounded-3xl border border-slate-200 p-6 h-64" />
+                </div>
+              </div>
+
+              {/* Paywall card */}
+              <div className="absolute inset-0 flex items-start justify-center pt-8 px-4" style={{ background: 'linear-gradient(to bottom, rgba(255,253,251,0.5) 0%, rgba(255,253,251,0.98) 30%)' }}>
+                <div className="bg-white rounded-3xl border border-orange-200/80 shadow-2xl p-8 sm:p-10 max-w-md w-full text-center space-y-5">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[#E86A33] to-[#D85820] rounded-2xl flex items-center justify-center mx-auto shadow-lg">
+                    <Lock className="w-7 h-7 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-extrabold uppercase tracking-wider text-[#E86A33] mb-2">Full Details Locked</p>
+                    <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                      Unlock {facility.name}
+                    </h3>
+                    <p className="text-sm text-slate-500 font-medium mt-2 leading-relaxed">
+                      Get direct contact, room pricing, doctor info, bed availability, and visit scheduling — all in one place.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2.5 text-left text-xs font-semibold text-slate-600">
+                    {['Direct Owner Contact', 'Room Pricing & Beds', 'Doctor On-Call Info', 'Schedule a Visit', 'Care Level Details', '50+ Homes Access'].map((f) => (
+                      <div key={f} className="flex items-center gap-2">
+                        <span className="w-4 h-4 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-[10px] font-black shrink-0">✓</span>
+                        {f}
+                      </div>
+                    ))}
+                  </div>
+
+                  <Link
+                    href={isLoggedIn ? '/payment' : '/login'}
+                    className="inline-flex items-center justify-center gap-2 w-full py-4 rounded-full bg-[#E86A33] hover:bg-[#D85820] text-white text-sm font-black shadow-lg active:scale-98 transition-all"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    {isLoggedIn ? 'Unlock Full Details — ₹999 / 6 Months' : 'Sign Up & Unlock Full Details'}
+                  </Link>
+
+                  <p className="text-[11px] text-slate-400">
+                    ₹999 one-time · 6 months access · All 50+ homes included
+                    {!isLoggedIn && (
+                      <> · <Link href="/login" className="text-[#E86A33] font-bold hover:underline">Already have access? Login →</Link></>
+                    )}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+        ) : (
+          <>
+          {/* ── VERIFIED CREDENTIALS TRUST STRIP ── */}
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
           <div className="bg-gradient-to-r from-emerald-50 via-teal-50/40 to-slate-50 rounded-2xl border border-emerald-200/80 p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-2xs">
             <div className="flex items-center gap-3.5">
               <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
@@ -828,6 +869,8 @@ export default function FacilityDetailPage() {
             </div>
           </div>
         </main>
+          </>
+      )}
       </div>
 
       {/* Fullscreen Photo Lightbox Modal */}

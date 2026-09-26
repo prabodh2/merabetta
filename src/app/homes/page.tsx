@@ -7,7 +7,6 @@ import FloatingWhatsApp from '@/components/public/FloatingWhatsApp';
 import FacilityCard from '@/components/homes/FacilityCard';
 import ScheduleVisitModal from '@/components/homes/ScheduleVisitModal';
 import CompareBar from '@/components/homes/CompareBar';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { PublicFacility } from '@/utils/publicHomes';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -28,26 +27,20 @@ import {
   Star,
   Award,
   Shield,
+  Lock,
 } from 'lucide-react';
+import Link from 'next/link';
+
+const FREE_PREVIEW_COUNT = 10;
 
 export default function SeniorLivingDirectoryPage() {
-  const router = useRouter();
   const { user, isLoggedIn, isLoading: authLoading } = useAuth();
   const { t, language } = useLanguage();
   const [facilities, setFacilities] = useState<PublicFacility[]>([]);
   const [availableCities, setAvailableCities] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Check login and subscription status
-  useEffect(() => {
-    if (!authLoading) {
-      if (!isLoggedIn) {
-        router.push('/login');
-      } else if (!user?.isSubscribed) {
-        router.push('/payment');
-      }
-    }
-  }, [authLoading, isLoggedIn, user, router]);
+  const isSubscribed = isLoggedIn && !!user?.isSubscribed;
 
   // Filters
   const [selectedCity, setSelectedCity] = useState<string>('all');
@@ -139,16 +132,8 @@ export default function SeniorLivingDirectoryPage() {
     setFilterPalliative(false);
   };
 
-  if (authLoading || !isLoggedIn || !user?.isSubscribed) {
-    return (
-      <div className="min-h-screen bg-[#FFFDFB] flex flex-col items-center justify-center space-y-4">
-        <div className="w-12 h-12 border-3 border-orange-200 border-t-[#E86A33] rounded-full animate-spin" />
-        <p className="text-xs font-bold text-slate-500 tracking-wider uppercase">
-          Verifying Directory Access Pass...
-        </p>
-      </div>
-    );
-  }
+
+
 
   return (
     <div className="min-h-screen bg-[#FFFDFB] text-slate-900 flex flex-col justify-between selection:bg-[#E86A33] selection:text-white">
@@ -494,18 +479,97 @@ export default function SeniorLivingDirectoryPage() {
               </button>
             </div>
           ) : (
-            /* Real Facility Grid */
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-              {filteredFacilities.map((facility) => (
-                <FacilityCard
-                  key={facility.id || facility.referenceId}
-                  facility={facility}
-                  onBookVisit={handleOpenVisitModal}
-                  isCompareSelected={compareIds.includes(facility.referenceId || facility.id)}
-                  onToggleCompare={handleToggleCompare}
-                  compareDisabled={compareIds.length >= 3}
-                />
-              ))}
+            /* Real Facility Grid with Paywall after card 10 */
+            <div className="space-y-8">
+              {/* Free cards — always visible */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+                {filteredFacilities.slice(0, FREE_PREVIEW_COUNT).map((facility) => (
+                  <FacilityCard
+                    key={facility.id || facility.referenceId}
+                    facility={facility}
+                    onBookVisit={handleOpenVisitModal}
+                    isCompareSelected={compareIds.includes(facility.referenceId || facility.id)}
+                    onToggleCompare={handleToggleCompare}
+                    compareDisabled={compareIds.length >= 3}
+                  />
+                ))}
+              </div>
+
+              {/* Paywall — shown only when there are more cards AND user is not subscribed */}
+              {!isSubscribed && filteredFacilities.length > FREE_PREVIEW_COUNT && (
+                <div className="relative">
+                  {/* Blurred locked cards behind the wall */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 blur-sm pointer-events-none select-none opacity-60" aria-hidden="true">
+                    {filteredFacilities.slice(FREE_PREVIEW_COUNT, FREE_PREVIEW_COUNT + 6).map((facility) => (
+                      <FacilityCard
+                        key={facility.id || facility.referenceId}
+                        facility={facility}
+                        onBookVisit={() => {}}
+                        isCompareSelected={false}
+                        onToggleCompare={() => {}}
+                        compareDisabled={true}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Paywall overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center px-4" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,253,251,0.7) 20%, rgba(255,253,251,0.97) 45%)' }}>
+                    <div className="bg-white rounded-3xl border border-orange-200/80 shadow-2xl p-8 sm:p-10 max-w-lg w-full text-center space-y-5 mt-24">
+                      <div className="w-16 h-16 bg-gradient-to-br from-[#E86A33] to-[#D85820] rounded-2xl flex items-center justify-center mx-auto shadow-lg">
+                        <Lock className="w-7 h-7 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-extrabold uppercase tracking-wider text-[#E86A33] mb-2">Access Required</p>
+                        <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                          {filteredFacilities.length - FREE_PREVIEW_COUNT}+ More Verified Homes
+                        </h3>
+                        <p className="text-sm text-slate-500 font-medium mt-2 leading-relaxed">
+                          You've seen {FREE_PREVIEW_COUNT} of {filteredFacilities.length} homes. Unlock the full directory — including direct owner contact, pricing, and doctor details.
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 text-left text-xs font-semibold text-slate-600">
+                        {['50+ Verified Homes', 'Direct Owner Contact', 'Room Pricing & Beds', 'Doctor On-Call Info'].map((f) => (
+                          <div key={f} className="flex items-center gap-2">
+                            <span className="w-4 h-4 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-[10px] font-black shrink-0">✓</span>
+                            {f}
+                          </div>
+                        ))}
+                      </div>
+
+                      <Link
+                        href={isLoggedIn ? '/payment' : '/login'}
+                        className="inline-flex items-center justify-center gap-2 w-full py-4 rounded-full bg-[#E86A33] hover:bg-[#D85820] text-white text-sm font-black shadow-lg active:scale-98 transition-all"
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        {isLoggedIn ? 'Unlock All Homes — ₹999 for 6 Months' : 'Sign Up Free & Unlock All Homes'}
+                      </Link>
+                      {!isLoggedIn && (
+                        <p className="text-[11px] text-slate-400">
+                          Already have access?{' '}
+                          <Link href="/login" className="text-[#E86A33] font-bold hover:underline">Login →</Link>
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* If subscribed, show remaining cards normally */}
+              {isSubscribed && filteredFacilities.length > FREE_PREVIEW_COUNT && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+                  {filteredFacilities.slice(FREE_PREVIEW_COUNT).map((facility) => (
+                    <FacilityCard
+                      key={facility.id || facility.referenceId}
+                      facility={facility}
+                      onBookVisit={handleOpenVisitModal}
+                      isCompareSelected={compareIds.includes(facility.referenceId || facility.id)}
+                      onToggleCompare={handleToggleCompare}
+                      compareDisabled={compareIds.length >= 3}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </main>
