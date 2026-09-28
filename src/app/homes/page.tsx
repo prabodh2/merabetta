@@ -6,7 +6,6 @@ import PublicFooter from '@/components/public/PublicFooter';
 import FloatingWhatsApp from '@/components/public/FloatingWhatsApp';
 import FacilityCard from '@/components/homes/FacilityCard';
 import ScheduleVisitModal from '@/components/homes/ScheduleVisitModal';
-import CompareBar from '@/components/homes/CompareBar';
 import SearchBar from '@/components/search/SearchBar';
 import { useAuth } from '@/contexts/AuthContext';
 import { PublicFacility } from '@/utils/publicHomes';
@@ -66,20 +65,6 @@ export default function SeniorLivingDirectoryPage() {
   const [modalFacility, setModalFacility] = useState<PublicFacility | null>(null);
   const [isVisitModalOpen, setIsVisitModalOpen] = useState<boolean>(false);
 
-  // Compare State
-  const [compareIds, setCompareIds] = useState<string[]>([]);
-
-  const handleToggleCompare = useCallback((facilityId: string) => {
-    setCompareIds((prev) => {
-      if (prev.includes(facilityId)) return prev.filter((id) => id !== facilityId);
-      if (prev.length >= 3) return prev; // Max 3
-      return [...prev, facilityId];
-    });
-  }, []);
-
-  const handleClearCompare = useCallback(() => {
-    setCompareIds([]);
-  }, []);
 
   // ── Care type → service filter mapping ──
   const CARE_TYPE_TO_SERVICES: Record<string, string[]> = {
@@ -554,172 +539,225 @@ export default function SeniorLivingDirectoryPage() {
               </button>
             </div>
           ) : (
-            /* Real Facility Grid with Paywall after card 2 */
+            /* Real Facility Grid with Preview Mode */
             <div className="space-y-8">
-              {/* Free cards — always visible */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-                {filteredFacilities.slice(0, FREE_PREVIEW_COUNT).map((facility) => (
-                  <FacilityCard
-                    key={facility.id || facility.referenceId}
-                    facility={facility}
-                    onBookVisit={handleOpenVisitModal}
-                    isCompareSelected={compareIds.includes(facility.referenceId || facility.id)}
-                    onToggleCompare={handleToggleCompare}
-                    compareDisabled={compareIds.length >= 3}
-                    isFreePreview={true}
-                  />
-                ))}
-              </div>
-
-              {/* ── SKELETON CARDS BLURRED OUT WITH CENTERED LOCK OVERLAY (when not subscribed) ── */}
-              {!isSubscribed && (
-                <div className="relative mt-4">
-                  {/* Blurred Skeleton Cards Grid */}
-                  <div
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 filter blur-[7px] opacity-40 select-none pointer-events-none"
-                    aria-hidden="true"
-                  >
-                    {[1, 2, 3, 4, 5, 6].map((i) => (
-                      <div
-                        key={i}
-                        className="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden flex flex-col justify-between"
-                      >
-                        {/* Skeleton Photo */}
-                        <div className="relative aspect-16/10 bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200 animate-pulse">
-                          <div className="absolute top-3.5 left-3.5 h-6 w-24 bg-white/70 rounded-full" />
-                          <div className="absolute top-3.5 right-3.5 h-6 w-16 bg-white/70 rounded-full" />
-                        </div>
-
-                        {/* Skeleton Body */}
-                        <div className="p-5 space-y-4">
-                          <div className="flex justify-between items-start">
-                            <div className="space-y-2 flex-1">
-                              <div className="h-5 bg-slate-200 rounded-lg w-3/4 animate-pulse" />
-                              <div className="h-3.5 bg-slate-200/60 rounded-md w-1/2" />
-                            </div>
-                            <div className="h-7 w-12 bg-amber-100 rounded-xl" />
-                          </div>
-
-                          {/* Skeleton Tags */}
-                          <div className="flex gap-2 pt-1 flex-wrap">
-                            <div className="h-6 w-24 bg-slate-100 rounded-lg" />
-                            <div className="h-6 w-28 bg-slate-100 rounded-lg" />
-                            <div className="h-6 w-20 bg-slate-100 rounded-lg" />
-                          </div>
-
-                          {/* Skeleton Price & Beds */}
-                          <div className="pt-2 border-t border-slate-100 flex justify-between items-center">
-                            <div className="space-y-1">
-                              <div className="h-3 w-16 bg-slate-200/60 rounded" />
-                              <div className="h-5 w-24 bg-slate-200 rounded-md animate-pulse" />
-                            </div>
-                            <div className="h-4 w-20 bg-slate-200/60 rounded" />
-                          </div>
-
-                          {/* Skeleton Button */}
-                          <div className="h-11 bg-gradient-to-r from-orange-200 to-amber-200 rounded-full w-full" />
-                        </div>
-                      </div>
+              {!isSubscribed ? (
+                /* ── NON-SUBSCRIBED: Balanced 3-column layout with 2 free cards + 1 Unlock card, followed by locked teasers ── */
+                <div className="space-y-8">
+                  {/* Row 1: 2 Free Preview Homes + 1 Unlock Promo Card filling Column 3 */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 items-stretch">
+                    {filteredFacilities.slice(0, FREE_PREVIEW_COUNT).map((facility) => (
+                      <FacilityCard
+                        key={facility.id || facility.referenceId}
+                        facility={facility}
+                        onBookVisit={handleOpenVisitModal}
+                        isFreePreview={true}
+                      />
                     ))}
-                  </div>
 
-                  {/* Centered Lock Graphic & Paywall Card Overlay */}
-                  <div
-                    className="absolute inset-0 flex items-center justify-center px-4 py-8 z-10"
-                    style={{
-                      background:
-                        'linear-gradient(to bottom, rgba(255,253,251,0.1) 0%, rgba(255,253,251,0.85) 20%, rgba(255,253,251,0.98) 50%, rgba(255,253,251,0.85) 80%, rgba(255,253,251,0.1) 100%)',
-                    }}
-                  >
-                    <div className="bg-white/95 backdrop-blur-xl rounded-3xl border border-orange-200/90 shadow-2xl p-7 sm:p-10 max-w-xl w-full text-center space-y-6">
-                      {/* Center Lock Badge */}
-                      <div className="relative mx-auto w-24 h-24 flex items-center justify-center">
-                        <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-[#E86A33]/30 via-amber-400/20 to-[#E86A33]/10 blur-xl animate-pulse" />
-                        <div className="absolute -inset-1 rounded-3xl border-2 border-orange-300/60 border-dashed animate-[spin_12s_linear_infinite]" />
-                        <div className="relative w-20 h-20 bg-gradient-to-br from-[#E86A33] via-[#E86A33] to-[#D85820] rounded-2xl flex items-center justify-center shadow-xl shadow-orange-500/25 text-white">
-                          <Lock className="w-10 h-10 stroke-[2.2]" />
+                    {/* Column 3: High-Converting Directory Access Pass Card */}
+                    <div className="bg-gradient-to-br from-[#FFF7F2] via-white to-[#FFF2EA] rounded-3xl border-2 border-orange-200/90 shadow-sm p-6 sm:p-7 flex flex-col justify-between relative overflow-hidden group">
+                      <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full bg-gradient-to-br from-orange-200/50 to-amber-100/40 blur-2xl pointer-events-none" />
+
+                      <div className="space-y-4 relative z-10">
+                        {/* Top Badge */}
+                        <div className="flex items-center justify-between">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-100 text-[#E86A33] text-[11px] font-black uppercase tracking-wider">
+                            <Sparkles className="w-3.5 h-3.5" />
+                            <span>Directory Access Pass</span>
+                          </span>
+                          <span className="text-xs font-black text-slate-800 bg-white px-2.5 py-0.5 rounded-full border border-orange-200/80 shadow-2xs">
+                            ₹999 / 6 Mo
+                          </span>
+                        </div>
+
+                        {/* Title & Lock */}
+                        <div className="flex items-start gap-3 pt-1">
+                          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#E86A33] to-[#D85820] text-white flex items-center justify-center shrink-0 shadow-md shadow-orange-500/25">
+                            <Lock className="w-6 h-6 stroke-[2.2]" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-black text-slate-900 leading-tight">
+                              Unlock 50+ Verified Homes
+                            </h3>
+                            <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">
+                              Get direct owner phone numbers, live vacant beds & all monthly tariffs.
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* 4 Feature Checklist */}
+                        <div className="space-y-2.5 pt-2 text-xs font-semibold text-slate-700 bg-white/70 p-3.5 rounded-2xl border border-orange-100/80">
+                          <div className="flex items-center gap-2">
+                            <span className="w-4 h-4 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-[10px] font-black shrink-0">✓</span>
+                            <span>Direct Owner Mobile & WhatsApp</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="w-4 h-4 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-[10px] font-black shrink-0">✓</span>
+                            <span>All Monthly Tariffs & Hidden Costs</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="w-4 h-4 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-[10px] font-black shrink-0">✓</span>
+                            <span>Live Vacant Bed Availability</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="w-4 h-4 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-[10px] font-black shrink-0">✓</span>
+                            <span>Doctor On-Call & Nursing Staff Details</span>
+                          </div>
                         </div>
                       </div>
 
-                      {/* Headings */}
-                      <div className="space-y-2">
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 text-[#E86A33] border border-orange-200/80 text-[11px] font-black uppercase tracking-wider">
-                          <Sparkles className="w-3.5 h-3.5" />
-                          <span>Unlock 50+ Verified Elder Homes</span>
-                        </div>
-
-                        <h3 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-tight">
-                          Rest of the Directory is Locked
-                        </h3>
-
-                        <p className="text-sm text-slate-600 font-medium leading-relaxed max-w-md mx-auto">
-                          You've previewed the first <span className="font-bold text-slate-900">2 free homes</span>. Activate your 6-month Access Pass to unlock direct owner numbers, exact pricing, and bed availability for all homes.
-                        </p>
-                      </div>
-
-                      {/* Benefit Pillars */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-left text-xs font-bold text-slate-700 bg-slate-50/80 p-4 rounded-2xl border border-slate-200/80">
-                        <div className="flex items-center gap-2">
-                          <span className="w-5 h-5 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-xs font-black shrink-0">✓</span>
-                          <span>Direct Owner & Caretaker Contact</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="w-5 h-5 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-xs font-black shrink-0">✓</span>
-                          <span>All Monthly Tariffs & Hidden Fees</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="w-5 h-5 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-xs font-black shrink-0">✓</span>
-                          <span>Live Vacant Bed Availability</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="w-5 h-5 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-xs font-black shrink-0">✓</span>
-                          <span>Doctor On-Call & ICU Nurse Info</span>
-                        </div>
-                      </div>
-
-                      {/* CTA Buttons */}
-                      <div className="space-y-3 pt-1">
+                      {/* CTA Button */}
+                      <div className="pt-4 relative z-10 space-y-2 border-t border-orange-100 mt-4">
                         <Link
                           href={isLoggedIn ? '/payment' : '/login'}
-                          className="inline-flex items-center justify-center gap-2.5 w-full py-4 px-6 rounded-full bg-gradient-to-r from-[#E86A33] to-[#D85820] hover:brightness-105 text-white text-sm sm:text-base font-black shadow-xl shadow-orange-500/25 active:scale-98 transition-all cursor-pointer"
+                          className="inline-flex items-center justify-center gap-2 w-full py-3.5 px-4 rounded-full bg-gradient-to-r from-[#E86A33] to-[#D85820] hover:brightness-105 text-white text-xs sm:text-sm font-black shadow-md shadow-orange-500/25 active:scale-98 transition-all cursor-pointer text-center"
                         >
-                          <Sparkles className="w-5 h-5" />
-                          <span>
-                            {isLoggedIn
-                              ? 'Pay ₹999 & Unlock All 50+ Homes (6 Months)'
-                              : 'Sign In / Register & Unlock (₹999)'}
-                          </span>
+                          <Sparkles className="w-4 h-4" />
+                          <span>{isLoggedIn ? 'Pay ₹999 & Unlock All 50+ Homes' : 'Sign In & Unlock (₹999 / 6 Mo)'}</span>
                         </Link>
-
-                        {!isLoggedIn ? (
-                          <p className="text-xs text-slate-500 font-medium">
-                            Already have an active pass?{' '}
-                            <Link href="/login" className="text-[#E86A33] font-bold hover:underline">
-                              Log In Here →
-                            </Link>
-                          </p>
-                        ) : (
-                          <p className="text-xs text-slate-400 font-medium">
-                            One-time payment of ₹999 · 6 months unlimited access across Maharashtra
-                          </p>
-                        )}
+                        <p className="text-[10px] text-center text-slate-400 font-medium">
+                          {isLoggedIn ? 'Instant 6-month access across Maharashtra' : 'Already have access? Log in →'}
+                        </p>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
 
-              {/* If subscribed, show remaining cards normally */}
-              {isSubscribed && filteredFacilities.length > FREE_PREVIEW_COUNT && (
+                  {/* Row 2: 3 Locked Teaser Listings */}
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h3 className="text-base font-black text-slate-800 flex items-center gap-2">
+                          <Lock className="w-4 h-4 text-[#E86A33]" />
+                          <span>More Homes in This Area (Locked)</span>
+                        </h3>
+                        <p className="text-xs text-slate-400">Unlock your pass to view full details and contact information.</p>
+                      </div>
+                      <Link
+                        href={isLoggedIn ? '/payment' : '/login'}
+                        className="text-xs font-bold text-[#E86A33] hover:underline"
+                      >
+                        Unlock all →
+                      </Link>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+                      {(filteredFacilities.length > FREE_PREVIEW_COUNT
+                        ? filteredFacilities.slice(FREE_PREVIEW_COUNT, FREE_PREVIEW_COUNT + 3)
+                        : [
+                            {
+                              id: 'locked-1',
+                              referenceId: 'MB-OAH-3341',
+                              name: 'Seva Sadan Assisted Living',
+                              city: 'Pune',
+                              startingPrice: 22000,
+                              photos: [{ url: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80', caption: 'Living Area' }],
+                            },
+                            {
+                              id: 'locked-2',
+                              referenceId: 'MB-OAH-4492',
+                              name: 'Vatsalya Senior Living Community',
+                              city: 'Mumbai',
+                              startingPrice: 28000,
+                              photos: [{ url: 'https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=800&q=80', caption: 'Garden Courtyard' }],
+                            },
+                            {
+                              id: 'locked-3',
+                              referenceId: 'MB-OAH-5521',
+                              name: 'Matoshree Elder Care & Nursing',
+                              city: 'Thane',
+                              startingPrice: 19500,
+                              photos: [{ url: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80', caption: 'Private Room' }],
+                            },
+                          ]
+                      ).map((item: any, idx: number) => {
+                        const photoUrl = item.photos?.[0]?.url || 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80';
+                        return (
+                          <div
+                            key={item.id || idx}
+                            className="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden flex flex-col justify-between group hover:shadow-md transition-all relative"
+                          >
+                            {/* Blurred Image with Lock Badge */}
+                            <div className="relative aspect-16/10 bg-slate-100 overflow-hidden">
+                              <img
+                                src={photoUrl}
+                                alt={item.name}
+                                className="w-full h-full object-cover filter blur-[3px] scale-105"
+                              />
+                              <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] flex items-center justify-center">
+                                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md text-white text-xs font-bold border border-white/20 shadow-md">
+                                  <Lock className="w-3.5 h-3.5 text-[#E86A33]" />
+                                  <span>Locked Listing</span>
+                                </div>
+                              </div>
+                              <span className="absolute top-3 left-3 px-2 py-0.5 rounded-md bg-white/90 backdrop-blur-md text-slate-700 text-[10px] font-bold">
+                                {item.city || 'Maharashtra'}
+                              </span>
+                            </div>
+
+                            {/* Card Body */}
+                            <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
+                              <div>
+                                <h4 className="font-bold text-base text-slate-800 line-clamp-1">
+                                  {item.name}
+                                </h4>
+                                <p className="text-xs text-slate-400 font-mono mt-1">
+                                  Phone: +91 98•••••••• <span className="text-[#E86A33] font-sans font-bold">(Locked)</span>
+                                </p>
+                              </div>
+
+                              <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                                <div>
+                                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Monthly Tariff</p>
+                                  <p className="text-sm font-black text-slate-700">₹••,000 <span className="text-xs font-normal text-slate-400">/mo</span></p>
+                                </div>
+                                <Link
+                                  href={isLoggedIn ? '/payment' : '/login'}
+                                  className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-orange-50 hover:bg-orange-100 text-[#E86A33] text-xs font-bold border border-orange-200/80 transition-all cursor-pointer"
+                                >
+                                  <Lock className="w-3 h-3" />
+                                  <span>Unlock</span>
+                                </Link>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Ambient Bottom Strip */}
+                  <div className="bg-gradient-to-r from-orange-50 via-amber-50/60 to-orange-50 border border-orange-200/80 rounded-3xl p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
+                    <div className="flex items-center gap-3.5 text-center sm:text-left">
+                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#E86A33] to-[#D85820] text-white flex items-center justify-center shrink-0 shadow-sm">
+                        <Lock className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-black text-slate-900">
+                          Looking for more options in Pune, Mumbai, Thane or Nashik?
+                        </p>
+                        <p className="text-xs text-slate-500 font-medium mt-0.5">
+                          Activate the 6-Month Pass (₹999) to unlock all 50+ homes with verified owner phone numbers.
+                        </p>
+                      </div>
+                    </div>
+                    <Link
+                      href={isLoggedIn ? '/payment' : '/login'}
+                      className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#E86A33] hover:bg-[#D85820] text-white text-xs font-bold shadow-md shrink-0 active:scale-98 transition-all cursor-pointer"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      <span>{isLoggedIn ? 'Unlock Pass (₹999)' : 'Sign In & Unlock (₹999)'}</span>
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                /* ── SUBSCRIBED: Show all facilities normally in the grid ── */
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-                  {filteredFacilities.slice(FREE_PREVIEW_COUNT).map((facility) => (
+                  {filteredFacilities.map((facility) => (
                     <FacilityCard
                       key={facility.id || facility.referenceId}
                       facility={facility}
                       onBookVisit={handleOpenVisitModal}
-                      isCompareSelected={compareIds.includes(facility.referenceId || facility.id)}
-                      onToggleCompare={handleToggleCompare}
-                      compareDisabled={compareIds.length >= 3}
                     />
                   ))}
                 </div>
@@ -793,13 +831,6 @@ export default function SeniorLivingDirectoryPage() {
         }}
       />
 
-      {/* Compare Bar */}
-      <CompareBar
-        selectedIds={compareIds}
-        facilities={facilities.map((f) => ({ id: f.id, referenceId: f.referenceId, name: f.name }))}
-        onRemove={(id) => setCompareIds((prev) => prev.filter((i) => i !== id))}
-        onClear={handleClearCompare}
-      />
 
       {/* Floating WhatsApp CTA */}
       <FloatingWhatsApp />

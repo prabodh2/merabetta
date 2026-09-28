@@ -15,20 +15,16 @@ import {
   CheckCircle2,
   Calendar,
   ExternalLink,
-  GitCompareArrows,
 } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 
 interface FacilityCardProps {
   facility: PublicFacility;
   onBookVisit?: (facility: PublicFacility) => void;
-  isCompareSelected?: boolean;
-  onToggleCompare?: (facilityId: string) => void;
-  compareDisabled?: boolean;
   isFreePreview?: boolean;
 }
 
-export default function FacilityCard({ facility, onBookVisit, isCompareSelected, onToggleCompare, compareDisabled, isFreePreview }: FacilityCardProps) {
+export default function FacilityCard({ facility, onBookVisit, isFreePreview }: FacilityCardProps) {
   const [activePhotoIdx, setActivePhotoIdx] = useState(0);
   const { t } = useLanguage();
 
@@ -193,26 +189,7 @@ export default function FacilityCard({ facility, onBookVisit, isCompareSelected,
         </div>
 
         {/* ── 3. Dual Call to Action Buttons ── */}
-        <div className="pt-3 border-t border-slate-100 space-y-2">
-          {/* Compare Toggle */}
-          {onToggleCompare && (
-            <button
-              type="button"
-              onClick={() => onToggleCompare(facility.referenceId || facility.id)}
-              disabled={compareDisabled && !isCompareSelected}
-              className={`w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
-                isCompareSelected
-                  ? 'bg-purple-100 text-purple-800 border border-purple-300 shadow-xs'
-                  : compareDisabled
-                    ? 'bg-slate-50 text-slate-400 border border-slate-100 cursor-not-allowed'
-                    : 'bg-white text-slate-600 border border-slate-200 hover:border-purple-300 hover:text-purple-700'
-              }`}
-            >
-              <GitCompareArrows className="w-3.5 h-3.5" />
-              <span>{isCompareSelected ? '✓ Added to Compare' : 'Add to Compare'}</span>
-            </button>
-          )}
-
+        <div className="pt-3 border-t border-slate-100">
           <div className="flex items-center gap-2">
             {/* Secondary: Book a Free Visit */}
             <button
