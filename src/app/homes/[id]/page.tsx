@@ -188,6 +188,26 @@ export default function FacilityDetailPage() {
       <div>
         <PublicNavbar />
 
+        {/* ── BACK NAVIGATION BAR ── */}
+        <div className="border-b border-slate-100 bg-white/80 backdrop-blur-sm sticky top-0 z-40">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center">
+            <button
+              type="button"
+              onClick={() => {
+                if (window.history.length > 1) {
+                  window.history.back();
+                } else {
+                  window.location.href = '/homes';
+                }
+              }}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-[#E86A33] to-[#D85820] text-white text-xs font-bold shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-95 transition-all duration-200 cursor-pointer"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span>{t.detail.breadcrumbs.homes || 'Back to Homes'}</span>
+            </button>
+          </div>
+        </div>
+
         {/* ── BREADCRUMBS & TOP CONTROLS ── */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 pb-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">

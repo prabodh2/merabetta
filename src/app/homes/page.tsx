@@ -7,6 +7,7 @@ import FloatingWhatsApp from '@/components/public/FloatingWhatsApp';
 import FacilityCard from '@/components/homes/FacilityCard';
 import ScheduleVisitModal from '@/components/homes/ScheduleVisitModal';
 import CompareBar from '@/components/homes/CompareBar';
+import SearchBar from '@/components/search/SearchBar';
 import { useAuth } from '@/contexts/AuthContext';
 import { PublicFacility } from '@/utils/publicHomes';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -45,9 +46,15 @@ export default function SeniorLivingDirectoryPage() {
   // Filters
   const [selectedCity, setSelectedCity] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [searchField, setSearchField] = useState<string | undefined>(undefined);
   const [selectedCareType, setSelectedCareType] = useState<string>('all');
   const [maxPrice, setMaxPrice] = useState<number>(50000);
   const [sortBy, setSortBy] = useState<string>('rating');
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalResults, setTotalResults] = useState<number>(0);
+  const [totalPages, setTotalPages] = useState<number>(1);
 
   // Quick Chips
   const [filterVerifiedOnly, setFilterVerifiedOnly] = useState<boolean>(false);
@@ -74,21 +81,87 @@ export default function SeniorLivingDirectoryPage() {
     setCompareIds([]);
   }, []);
 
-  // Fetch approved homes from API
+  // ── Care type → service filter mapping ──
+  const CARE_TYPE_TO_SERVICES: Record<string, string[]> = {
+    assisted: ['Assisted Living'],
+    palliative: ['Palliative Care'],
+    independent: ['Independent Living'],
+    dementia: ['Dementia Care'],
+    hospital: ['Home Hospital'],
+  };
+
+  // ── Sort field mapping ──
+  const SORT_MAP: Record<string, { field: string; order: 'asc' | 'desc' }> = {
+    rating: { field: 'createdAt', order: 'desc' },
+    price_asc: { field: 'price', order: 'asc' },
+    price_desc: { field: 'price', order: 'desc' },
+    capacity: { field: 'capacity', order: 'desc' },
+  };
+
+  // Fetch homes via the new generic search API
   const fetchHomes = useCallback(async () => {
     setIsLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (selectedCity && selectedCity !== 'all') params.append('city', selectedCity);
-      if (searchQuery.trim()) params.append('search', searchQuery.trim());
-      if (selectedCareType !== 'all') params.append('careType', selectedCareType);
-      if (maxPrice < 50000) params.append('maxPrice', maxPrice.toString());
-      if (sortBy) params.append('sortBy', sortBy);
+      // Build structured search request
+      const searchRequest: Record<string, unknown> = {
+        page: currentPage,
+        limit: 20,
+      };
 
-      const res = await fetch(`/api/homes?${params.toString()}`);
+      // Query text
+      if (searchQuery.trim()) {
+        searchRequest.query = searchQuery.trim();
+        // If a specific search field was selected in the SearchBar
+        if (searchField) {
+          const fieldMap: Record<string, string[]> = {
+            homeName: ['homeName'],
+            pinCode: ['pinCode'],
+            city: ['city', 'address'],
+            state: ['state'],
+            services: ['services', 'medical'],
+            livingType: ['services'],
+          };
+          searchRequest.fields = fieldMap[searchField] || undefined;
+        }
+      }
+
+      // Build filters
+      const filters: Record<string, unknown> = {};
+
+      if (selectedCity && selectedCity !== 'all') {
+        filters.city = selectedCity;
+      }
+
+      if (selectedCareType !== 'all' && CARE_TYPE_TO_SERVICES[selectedCareType]) {
+        filters.services = CARE_TYPE_TO_SERVICES[selectedCareType];
+      }
+
+      if (maxPrice < 50000) {
+        filters.price = { max: maxPrice };
+      }
+
+      if (Object.keys(filters).length > 0) {
+        searchRequest.filters = filters;
+      }
+
+      // Sort
+      if (sortBy && SORT_MAP[sortBy]) {
+        searchRequest.sort = SORT_MAP[sortBy];
+      }
+
+      const res = await fetch('/api/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(searchRequest),
+      });
       const data = await res.json();
+
       if (data.success) {
-        setFacilities(data.facilities || []);
+        setFacilities(data.data || data.facilities || []);
+        if (data.pagination) {
+          setTotalResults(data.pagination.total);
+          setTotalPages(data.pagination.totalPages);
+        }
         if (data.availableCities) {
           setAvailableCities(data.availableCities);
         }
@@ -98,7 +171,7 @@ export default function SeniorLivingDirectoryPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedCity, searchQuery, selectedCareType, maxPrice, sortBy]);
+  }, [selectedCity, searchQuery, searchField, selectedCareType, maxPrice, sortBy, currentPage]);
 
   useEffect(() => {
     fetchHomes();
@@ -123,14 +196,28 @@ export default function SeniorLivingDirectoryPage() {
   const handleResetFilters = () => {
     setSelectedCity('all');
     setSearchQuery('');
+    setSearchField(undefined);
     setSelectedCareType('all');
     setMaxPrice(50000);
     setSortBy('rating');
+    setCurrentPage(1);
     setFilterVerifiedOnly(false);
     setFilterDoctor247(false);
     setFilterVegMeals(false);
     setFilterPalliative(false);
   };
+
+  // Handle search from SearchBar component
+  const handleSearch = useCallback(({ query, field }: { query: string; field?: string }) => {
+    setSearchQuery(query);
+    setSearchField(field);
+    setCurrentPage(1);
+  }, []);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCity, selectedCareType, maxPrice, sortBy]);
 
 
 
@@ -285,7 +372,7 @@ export default function SeniorLivingDirectoryPage() {
             </div>
 
             {/* Input Controls Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
               {/* 1. City Dropdown */}
               <div className="md:col-span-3">
                 <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">
@@ -334,41 +421,16 @@ export default function SeniorLivingDirectoryPage() {
                 </div>
               </div>
 
-              {/* 3. Search Query / Name */}
-              <div className="md:col-span-4">
+              {/* 3. Smart SearchBar — replaces old text input + button */}
+              <div className="md:col-span-6">
                 <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">
                   {t.directory.search.facilityLabel}
                 </label>
-                <div className="relative">
-                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    placeholder={t.directory.search.searchPlaceholder}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-medium text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#E86A33]/20 focus:border-[#E86A33]"
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery('')}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 cursor-pointer"
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* 4. Action Button */}
-              <div className="md:col-span-2 pt-1 md:pt-4">
-                <button
-                  type="button"
-                  onClick={fetchHomes}
-                  className="w-full inline-flex items-center justify-center gap-2 py-3 px-5 rounded-full bg-[#E86A33] hover:bg-[#D85820] active:scale-98 text-white text-xs font-black shadow-md hover:shadow-lg transition-all cursor-pointer"
-                >
-                  <Search className="w-3.5 h-3.5 stroke-[3]" />
-                  <span>{t.directory.search.searchBtn}</span>
-                </button>
+                <SearchBar
+                  onSearch={handleSearch}
+                  initialQuery={searchQuery}
+                  isLoading={isLoading}
+                />
               </div>
             </div>
 
@@ -570,6 +632,60 @@ export default function SeniorLivingDirectoryPage() {
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* ── PAGINATION ── */}
+          {totalPages > 1 && !isLoading && filteredFacilities.length > 0 && (
+            <div className="flex items-center justify-center gap-2 pt-8 pb-4">
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage <= 1}
+                className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all"
+              >
+                ← Previous
+              </button>
+
+              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                let pageNum: number;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+                return (
+                  <button
+                    key={pageNum}
+                    type="button"
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`w-10 h-10 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      currentPage === pageNum
+                        ? 'bg-[#E86A33] text-white shadow-md'
+                        : 'bg-white border border-slate-200 text-slate-600 hover:bg-orange-50 hover:border-orange-200'
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage >= totalPages}
+                className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all"
+              >
+                Next →
+              </button>
+
+              <span className="ml-3 text-[11px] text-slate-400 font-medium">
+                Page {currentPage} of {totalPages} ({totalResults} results)
+              </span>
             </div>
           )}
         </main>
