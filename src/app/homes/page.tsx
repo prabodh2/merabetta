@@ -32,7 +32,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
-const FREE_PREVIEW_COUNT = 10;
+const FREE_PREVIEW_COUNT = 2;
 
 export default function SeniorLivingDirectoryPage() {
   const { user, isLoggedIn, isLoading: authLoading } = useAuth();
@@ -541,7 +541,7 @@ export default function SeniorLivingDirectoryPage() {
               </button>
             </div>
           ) : (
-            /* Real Facility Grid with Paywall after card 10 */
+            /* Real Facility Grid with Paywall after card 2 */
             <div className="space-y-8">
               {/* Free cards — always visible */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
