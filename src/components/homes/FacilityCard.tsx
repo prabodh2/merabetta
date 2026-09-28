@@ -74,10 +74,6 @@ export default function FacilityCard({ facility, onBookVisit, isFreePreview }: F
               </span>
             )}
           </div>
-
-          <span className="font-mono text-[10px] font-bold text-white bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-md">
-            {facility.referenceId}
-          </span>
         </div>
 
         {/* Carousel Navigation Arrows (desktop hover) */}

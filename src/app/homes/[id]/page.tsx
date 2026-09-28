@@ -246,7 +246,7 @@ export default function FacilityDetailPage() {
               <span className="font-bold text-slate-900 truncate max-w-xs">{facility.name}</span>
             </div>
 
-            {/* Share & Save */}
+            {/* Share */}
             <div className="flex items-center gap-2 self-end sm:self-auto">
               <button
                 type="button"
@@ -256,10 +256,6 @@ export default function FacilityDetailPage() {
                 {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Share2 className="w-3.5 h-3.5" />}
                 <span>{copiedLink ? t.detail.copied : t.detail.share}</span>
               </button>
-
-              <span className="font-mono text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
-                {facility.referenceId}
-              </span>
             </div>
           </div>
         </div>
