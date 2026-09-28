@@ -25,9 +25,10 @@ interface FacilityCardProps {
   isCompareSelected?: boolean;
   onToggleCompare?: (facilityId: string) => void;
   compareDisabled?: boolean;
+  isFreePreview?: boolean;
 }
 
-export default function FacilityCard({ facility, onBookVisit, isCompareSelected, onToggleCompare, compareDisabled }: FacilityCardProps) {
+export default function FacilityCard({ facility, onBookVisit, isCompareSelected, onToggleCompare, compareDisabled, isFreePreview }: FacilityCardProps) {
   const [activePhotoIdx, setActivePhotoIdx] = useState(0);
   const { t } = useLanguage();
 
@@ -46,7 +47,7 @@ export default function FacilityCard({ facility, onBookVisit, isCompareSelected,
     setActivePhotoIdx((prev) => (prev - 1 + photos.length) % photos.length);
   };
 
-  const detailUrl = `/homes/${facility.referenceId || facility.id}`;
+  const detailUrl = `/homes/${facility.referenceId || facility.id}${isFreePreview ? '?preview=1' : ''}`;
 
   return (
     <div className="group bg-white rounded-3xl border border-slate-200/80 shadow-xs hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden flex flex-col justify-between">
@@ -66,9 +67,16 @@ export default function FacilityCard({ facility, onBookVisit, isCompareSelected,
 
         {/* Top Badges */}
         <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between pointer-events-none">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/95 backdrop-blur-md shadow-xs text-emerald-800 text-[11px] font-extrabold border border-emerald-200">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-            <span>{t.directory.card.verified}</span>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/95 backdrop-blur-md shadow-xs text-emerald-800 text-[11px] font-extrabold border border-emerald-200">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              <span>{t.directory.card.verified}</span>
+            </div>
+            {isFreePreview && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-600/90 text-white text-[10px] font-black uppercase tracking-wider backdrop-blur-md shadow-xs">
+                Free Full Preview
+              </span>
+            )}
           </div>
 
           <span className="font-mono text-[10px] font-bold text-white bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-md">

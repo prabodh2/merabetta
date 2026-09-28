@@ -49,6 +49,25 @@ export default function FacilityDetailPage() {
 
   const isSubscribed = isLoggedIn && !!user?.isSubscribed;
 
+  const [isFreePreview, setIsFreePreview] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const sp = new URLSearchParams(window.location.search);
+      if (sp.get('preview') === '1' || sp.get('preview') === 'true') return true;
+      try {
+        const stored = JSON.parse(sessionStorage.getItem('merabetta_free_preview_ids') || '[]');
+        if (stored.includes(id) || stored.includes(id?.toLowerCase())) return true;
+      } catch {}
+    }
+    return (
+      id === 'sample-1' ||
+      id === 'sample-2' ||
+      id?.toLowerCase() === 'mb-oah-691283' ||
+      id?.toLowerCase() === 'mb-oah-782341'
+    );
+  });
+
+  const canViewFull = isSubscribed || isFreePreview;
+
   const [facility, setFacility] = useState<PublicFacility | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -82,6 +101,9 @@ export default function FacilityDetailPage() {
       const data = await res.json();
       if (data.success && data.facility) {
         setFacility(data.facility);
+        if (data.isFreePreview || (data.facility as any).isFreePreview) {
+          setIsFreePreview(true);
+        }
       } else {
         setErrorMsg(data.error || 'Facility details could not be found.');
       }
@@ -251,6 +273,11 @@ export default function FacilityDetailPage() {
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                   {t.detail.verifiedFacility}
                 </span>
+                {isFreePreview && !isSubscribed && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-600 text-white text-[11px] font-black uppercase tracking-wider shadow-xs">
+                    <span>✨ Free Full Preview</span>
+                  </span>
+                )}
                 <span className="text-[11px] font-bold text-[#E86A33] bg-orange-50 px-2.5 py-0.5 rounded-full">
                   {facility.organizationType} {t.detail.organization}
                 </span>
@@ -329,8 +356,8 @@ export default function FacilityDetailPage() {
           </div>
         </section>
 
-        {/* ── PAYWALL — shown for non-subscribed visitors ── */}
-        {!isSubscribed ? (
+        {/* ── PAYWALL — shown for non-subscribed visitors on locked homes ── */}
+        {!canViewFull ? (
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
             <div className="relative">
               {/* Blurred ghost content */}

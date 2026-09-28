@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getEnrollmentById } from '@/lib/enrollmentStore';
+import { getEnrollmentById, getEnrollments } from '@/lib/enrollmentStore';
 import { transformRecordToPublicFacility, PublicFacility, SAMPLE_APPROVED_HOMES } from '@/utils/publicHomes';
 
 interface RouteContext {
@@ -47,9 +47,38 @@ export async function GET(request: Request, context: RouteContext) {
       return NextResponse.json({ success: false, error: 'Facility not found' }, { status: 404 });
     }
 
+    // Determine if this facility is one of the 2 free preview facilities
+    let isFreePreview = false;
+    try {
+      const topApproved = await getEnrollments({ status: 'approved', limit: 2 });
+      if (topApproved && topApproved.records && topApproved.records.length > 0) {
+        const topIds = topApproved.records.flatMap((r) => [
+          r._id?.toString()?.toLowerCase(),
+          r.referenceId?.toLowerCase(),
+        ]);
+        isFreePreview = topIds.includes(id.toLowerCase());
+      } else {
+        const sampleTopIds = SAMPLE_APPROVED_HOMES.slice(0, 2).flatMap((h) => [
+          h.id.toLowerCase(),
+          h.referenceId.toLowerCase(),
+        ]);
+        isFreePreview = sampleTopIds.includes(id.toLowerCase());
+      }
+    } catch {
+      const sampleTopIds = SAMPLE_APPROVED_HOMES.slice(0, 2).flatMap((h) => [
+        h.id.toLowerCase(),
+        h.referenceId.toLowerCase(),
+      ]);
+      isFreePreview = sampleTopIds.includes(id.toLowerCase());
+    }
+
     return NextResponse.json({
       success: true,
-      facility,
+      facility: {
+        ...facility,
+        isFreePreview,
+      },
+      isFreePreview,
       rawRecord,
     });
   } catch (error: unknown) {
