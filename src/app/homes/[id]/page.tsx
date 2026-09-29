@@ -37,6 +37,13 @@ import {
   Info,
   Lock,
   Sparkles,
+  Stethoscope,
+  Ambulance,
+  Utensils,
+  Wifi,
+  Trees,
+  Accessibility,
+  Brain,
 } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -382,7 +389,7 @@ export default function FacilityDetailPage() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-2.5 text-left text-xs font-semibold text-slate-600">
-                    {['Direct Owner Contact', 'Room Pricing & Beds', 'Doctor On-Call Info', 'Schedule a Visit', 'Care Level Details', '50+ Homes Access'].map((f) => (
+                    {['Direct Owner Contact', 'Room Pricing & Beds', 'Doctor On-Call Info', 'Schedule a Visit', 'Care Level Details', '10 Homes Access'].map((f) => (
                       <div key={f} className="flex items-center gap-2">
                         <span className="w-4 h-4 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-[10px] font-black shrink-0">✓</span>
                         {f}
@@ -399,7 +406,7 @@ export default function FacilityDetailPage() {
                   </Link>
 
                   <p className="text-[11px] text-slate-400">
-                    ₹999 one-time · 6 months access · All 50+ homes included
+                    ₹999 one-time · 6 months access · 10 verified homes included
                     {!isLoggedIn && (
                       <> · <Link href="/login" className="text-[#E86A33] font-bold hover:underline">Already have access? Login →</Link></>
                     )}
@@ -610,40 +617,41 @@ export default function FacilityDetailPage() {
                 </div>
               </div>
 
-              {/* Section 3: Medical & Healthcare Infrastructure */}
-              <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-5">
-                <div className="flex items-center gap-2 text-xs font-extrabold text-[#E86A33] uppercase tracking-wider">
-                  <Hospital className="w-4 h-4" />
-                  <span>{t.detail.clinicalBadge}</span>
+              {/* Section 3: What this place offers (Airbnb Style) */}
+              <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-6">
+                <div>
+                  <h3 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+                    {t.detail.medicalTitle}
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Care protocols, medical amenities and daily living facilities available on premises
+                  </p>
                 </div>
-                <h3 className="text-lg font-black text-slate-900">{t.detail.medicalTitle}</h3>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 sm:gap-y-5 gap-x-8 sm:gap-x-12 pt-2 border-t border-slate-100">
                   {[
-                    { label: t.detail.docVisitsTitle, active: facility.medical.doctorVisits, desc: t.detail.docVisitsDesc },
-                    { label: t.detail.nursingTitle, active: facility.medical.nursingCare, desc: t.detail.nursingDesc },
-                    { label: t.detail.icuTieupTitle, active: facility.medical.emergencyCare, desc: t.detail.icuTieupDesc },
-                    { label: t.detail.physioTitle, active: facility.medical.physiotherapy, desc: t.detail.physioDesc },
-                    { label: t.detail.dementiaTitle, active: facility.services.dementiaCare, desc: t.detail.dementiaDesc },
-                    { label: t.detail.ambulanceTitle, active: true, desc: t.detail.ambulanceDesc },
-                  ].map((item, i) => (
-                    <div
-                      key={i}
-                      className={`p-3.5 rounded-2xl border flex items-start gap-3 ${
-                        item.active ? 'border-emerald-200 bg-emerald-50/20' : 'border-slate-200 bg-slate-50 opacity-60'
-                      }`}
-                    >
-                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
-                        item.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'
-                      }`}>
-                        {item.active ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : <Info className="w-3.5 h-3.5" />}
+                    { icon: Stethoscope, label: t.detail.docVisitsTitle, available: facility.medical.doctorVisits },
+                    { icon: HeartPulse, label: t.detail.nursingTitle, available: facility.medical.nursingCare },
+                    { icon: Hospital, label: t.detail.icuTieupTitle, available: facility.medical.emergencyCare },
+                    { icon: Activity, label: t.detail.physioTitle, available: facility.medical.physiotherapy },
+                    { icon: Ambulance, label: t.detail.ambulanceTitle, available: true },
+                    { icon: Brain, label: t.detail.dementiaTitle, available: facility.services.dementiaCare },
+                    { icon: Utensils, label: 'Pure vegetarian nutritious meals (4x daily)', available: facility.services.meals ?? true },
+                    { icon: ShieldCheck, label: '24/7 CCTV surveillance & secure campus', available: true },
+                    { icon: Accessibility, label: 'Wheelchair friendly & elevator access', available: true },
+                    { icon: Trees, label: 'Landscaped garden & walking paths', available: true },
+                    { icon: Wifi, label: 'High-speed Wi-Fi across campus', available: true },
+                    { icon: Sparkles, label: 'Daily housekeeping & laundry service', available: true },
+                  ]
+                    .filter((item) => item.available !== false)
+                    .map((item, i) => (
+                      <div key={i} className="flex items-center gap-4 py-1">
+                        <item.icon className="w-5 h-5 sm:w-6 sm:h-6 text-slate-700 shrink-0 stroke-[1.6]" />
+                        <span className="text-sm sm:text-base text-slate-800 font-normal">
+                          {item.label}
+                        </span>
                       </div>
-                      <div>
-                        <h4 className="font-bold text-slate-900">{item.label}</h4>
-                        <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{item.desc}</p>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               </div>
 

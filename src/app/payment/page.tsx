@@ -110,7 +110,7 @@ export default function SubscriptionPaymentPage() {
                   Unlock Senior Living Directory Pass
                 </h1>
                 <p className="text-xs sm:text-sm text-slate-600 mt-1">
-                  Get complete, unrestricted access to all 50+ verified homes across Maharashtra.
+                  Get complete access to 10 verified homes across Maharashtra.
                 </p>
               </div>
             </div>
@@ -140,7 +140,7 @@ export default function SubscriptionPaymentPage() {
                   Ref: {referenceId}
                 </p>
                 <p className="text-sm text-slate-600 font-medium leading-relaxed">
-                  Your <b>6-Month Directory Access Pass</b> is now active! Unlocking all 50+ verified senior care homes...
+                  Your <b>6-Month Directory Access Pass</b> is now active! Unlocking 10 verified senior care homes...
                 </p>
                 <div className="pt-2 flex items-center justify-center gap-2 text-xs font-bold text-[#E86A33]">
                   <RefreshCw className="w-4 h-4 animate-spin" />
@@ -357,7 +357,7 @@ export default function SubscriptionPaymentPage() {
                     <span>Validity: 180 Days (6 Months)</span>
                   </div>
                   <p className="text-[11px] text-slate-600 leading-relaxed">
-                    Once paid, your account automatically has unlimited access to all verified facility details, contact info, and visit scheduling.
+                    Once paid, your account automatically has access to 10 verified facility details, contact info, and visit scheduling.
                   </p>
                 </div>
               </div>
@@ -373,7 +373,7 @@ export default function SubscriptionPaymentPage() {
                     <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
                       <Check className="w-3 h-3 stroke-[3]" />
                     </div>
-                    <span><b>50+ Verified Senior Homes</b> across Pune, Mumbai, Thane & Nashik</span>
+                    <span><b>10 Verified Senior Homes</b> across Pune, Mumbai, Thane & Nashik</span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">

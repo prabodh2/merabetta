@@ -32,6 +32,7 @@ import {
 import Link from 'next/link';
 
 const FREE_PREVIEW_COUNT = 2;
+const SUBSCRIBED_LIMIT = 10;
 
 export default function SeniorLivingDirectoryPage() {
   const { user, isLoggedIn, isLoading: authLoading } = useAuth();
@@ -90,7 +91,7 @@ export default function SeniorLivingDirectoryPage() {
       // Build structured search request
       const searchRequest: Record<string, unknown> = {
         page: currentPage,
-        limit: 20,
+        limit: SUBSCRIBED_LIMIT,
       };
 
       // Query text
@@ -173,10 +174,11 @@ export default function SeniorLivingDirectoryPage() {
     });
   }, [facilities, filterVerifiedOnly, filterDoctor247, filterVegMeals, filterPalliative]);
 
-  // Cache top 2 preview IDs so their detail page is automatically unlocked
+  // Cache preview IDs so their detail page is automatically unlocked
   useEffect(() => {
     if (typeof window !== 'undefined' && filteredFacilities.length > 0) {
-      const topIds = filteredFacilities.slice(0, FREE_PREVIEW_COUNT).flatMap((f) => [
+      const allowedCount = isSubscribed ? SUBSCRIBED_LIMIT : FREE_PREVIEW_COUNT;
+      const topIds = filteredFacilities.slice(0, allowedCount).flatMap((f) => [
         f.id,
         f.referenceId,
         f.id?.toLowerCase(),
@@ -184,7 +186,7 @@ export default function SeniorLivingDirectoryPage() {
       ]).filter(Boolean);
       sessionStorage.setItem('merabetta_free_preview_ids', JSON.stringify(topIds));
     }
-  }, [filteredFacilities]);
+  }, [filteredFacilities, isSubscribed]);
 
   const handleOpenVisitModal = (facility: PublicFacility) => {
     setModalFacility(facility);
@@ -479,7 +481,9 @@ export default function SeniorLivingDirectoryPage() {
                 : t.directory.listings.title}
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              {t.directory.listings.subtitle(filteredFacilities.length)}
+              {isSubscribed
+                ? `Showing ${Math.min(filteredFacilities.length, SUBSCRIBED_LIMIT)} verified homes with transparent monthly pricing`
+                : t.directory.listings.subtitle(Math.min(filteredFacilities.length, FREE_PREVIEW_COUNT))}
             </p>
           </div>
 
@@ -578,7 +582,7 @@ export default function SeniorLivingDirectoryPage() {
                           </div>
                           <div>
                             <h3 className="text-lg font-black text-slate-900 leading-tight">
-                              Unlock 50+ Verified Homes
+                              Unlock 10 Verified Homes
                             </h3>
                             <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">
                               Get direct owner phone numbers, live vacant beds & all monthly tariffs.
@@ -614,7 +618,7 @@ export default function SeniorLivingDirectoryPage() {
                           className="inline-flex items-center justify-center gap-2 w-full py-3.5 px-4 rounded-full bg-gradient-to-r from-[#E86A33] to-[#D85820] hover:brightness-105 text-white text-xs sm:text-sm font-black shadow-md shadow-orange-500/25 active:scale-98 transition-all cursor-pointer text-center"
                         >
                           <Sparkles className="w-4 h-4" />
-                          <span>{isLoggedIn ? 'Pay ₹999 & Unlock All 50+ Homes' : 'Sign In & Unlock (₹999 / 6 Mo)'}</span>
+                          <span>{isLoggedIn ? 'Pay ₹999 & Unlock 10 Homes' : 'Sign In & Unlock 10 Homes (₹999 / 6 Mo)'}</span>
                         </Link>
                         <p className="text-[10px] text-center text-slate-400 font-medium">
                           {isLoggedIn ? 'Instant 6-month access across Maharashtra' : 'Already have access? Log in →'}
@@ -737,7 +741,7 @@ export default function SeniorLivingDirectoryPage() {
                           Looking for more options in Pune, Mumbai, Thane or Nashik?
                         </p>
                         <p className="text-xs text-slate-500 font-medium mt-0.5">
-                          Activate the 6-Month Pass (₹999) to unlock all 50+ homes with verified owner phone numbers.
+                          Activate the 6-Month Pass (₹999) to unlock 10 verified homes with verified owner phone numbers.
                         </p>
                       </div>
                     </div>
@@ -746,76 +750,55 @@ export default function SeniorLivingDirectoryPage() {
                       className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#E86A33] hover:bg-[#D85820] text-white text-xs font-bold shadow-md shrink-0 active:scale-98 transition-all cursor-pointer"
                     >
                       <Sparkles className="w-4 h-4" />
-                      <span>{isLoggedIn ? 'Unlock Pass (₹999)' : 'Sign In & Unlock (₹999)'}</span>
+                      <span>{isLoggedIn ? 'Unlock 10 Homes (₹999)' : 'Sign In & Unlock (₹999)'}</span>
                     </Link>
                   </div>
                 </div>
               ) : (
-                /* ── SUBSCRIBED: Show all facilities normally in the grid ── */
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-                  {filteredFacilities.map((facility) => (
-                    <FacilityCard
-                      key={facility.id || facility.referenceId}
-                      facility={facility}
-                      onBookVisit={handleOpenVisitModal}
-                    />
-                  ))}
+                /* ── SUBSCRIBED: Show only 10 cards of homes in the grid ── */
+                <div className="space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+                    {filteredFacilities.slice(0, SUBSCRIBED_LIMIT).map((facility) => (
+                      <FacilityCard
+                        key={facility.id || facility.referenceId}
+                        facility={facility}
+                        onBookVisit={handleOpenVisitModal}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Concierge Assistance Strip for Subscribed Users */}
+                  <div className="bg-gradient-to-r from-orange-50/80 via-amber-50/50 to-orange-50/80 border border-orange-200/70 rounded-3xl p-6 sm:p-7 flex flex-col sm:flex-row items-center justify-between gap-5 shadow-xs">
+                    <div className="flex items-center gap-4 text-center sm:text-left">
+                      <div className="w-12 h-12 rounded-2xl bg-[#E86A33] text-white flex items-center justify-center shrink-0 shadow-sm">
+                        <Sparkles className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 justify-center sm:justify-start">
+                          <span className="text-[11px] font-extrabold text-[#E86A33] uppercase tracking-wider bg-orange-100/80 px-2.5 py-0.5 rounded-full">
+                            Pass Active • 10 Verified Homes
+                          </span>
+                        </div>
+                        <p className="text-sm font-black text-slate-900 mt-1">
+                          Need specialized care options or personal coordination?
+                        </p>
+                        <p className="text-xs text-slate-500 font-medium mt-0.5">
+                          Our care team can help connect you with verified administrators, schedule on-site visits, and check bed availability.
+                        </p>
+                      </div>
+                    </div>
+                    <a
+                      href="https://wa.me/919371458326?text=Hello%20MeraBetta%2C%20I%20have%20an%20active%20directory%20pass%20and%20need%20assistance%20finding%20senior%20homes."
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#E86A33] hover:bg-[#D85820] text-white text-xs font-bold shadow-md shrink-0 active:scale-98 transition-all cursor-pointer whitespace-nowrap"
+                    >
+                      <PhoneCall className="w-4 h-4" />
+                      <span>Talk to Concierge</span>
+                    </a>
+                  </div>
                 </div>
               )}
-            </div>
-          )}
-
-          {/* ── PAGINATION (only shown for subscribed users) ── */}
-          {isSubscribed && totalPages > 1 && !isLoading && filteredFacilities.length > 0 && (
-            <div className="flex items-center justify-center gap-2 pt-8 pb-4">
-              <button
-                type="button"
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage <= 1}
-                className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all"
-              >
-                ← Previous
-              </button>
-
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                let pageNum: number;
-                if (totalPages <= 5) {
-                  pageNum = i + 1;
-                } else if (currentPage <= 3) {
-                  pageNum = i + 1;
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + i;
-                } else {
-                  pageNum = currentPage - 2 + i;
-                }
-                return (
-                  <button
-                    key={pageNum}
-                    type="button"
-                    onClick={() => setCurrentPage(pageNum)}
-                    className={`w-10 h-10 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                      currentPage === pageNum
-                        ? 'bg-[#E86A33] text-white shadow-md'
-                        : 'bg-white border border-slate-200 text-slate-600 hover:bg-orange-50 hover:border-orange-200'
-                    }`}
-                  >
-                    {pageNum}
-                  </button>
-                );
-              })}
-
-              <button
-                type="button"
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage >= totalPages}
-                className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all"
-              >
-                Next →
-              </button>
-
-              <span className="ml-3 text-[11px] text-slate-400 font-medium">
-                Page {currentPage} of {totalPages} ({totalResults} results)
-              </span>
             </div>
           )}
         </main>
