@@ -37,10 +37,14 @@ export default function SubscriptionPaymentPage() {
   const [referenceId, setReferenceId] = useState('');
   const [error, setError] = useState('');
 
-  // If user is already subscribed, redirect them to /homes
+  // Enforce compulsory login & subscription check
   useEffect(() => {
-    if (!authLoading && isLoggedIn && user?.isSubscribed) {
-      router.push('/homes');
+    if (!authLoading) {
+      if (!isLoggedIn) {
+        router.push('/login?redirect=/payment');
+      } else if (user?.isSubscribed) {
+        router.push('/homes');
+      }
     }
   }, [authLoading, isLoggedIn, user, router]);
 
@@ -80,6 +84,17 @@ export default function SubscriptionPaymentPage() {
       setIsProcessing(false);
     }
   };
+
+  if (authLoading || !isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#E86A33]"></div>
+          <p className="text-xs font-semibold text-slate-500">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#FFFDFB] text-slate-900 flex flex-col justify-between selection:bg-[#E86A33] selection:text-white">

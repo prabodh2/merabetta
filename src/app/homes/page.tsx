@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import PublicNavbar from '@/components/public/PublicNavbar';
 import PublicFooter from '@/components/public/PublicFooter';
 import FloatingWhatsApp from '@/components/public/FloatingWhatsApp';
@@ -35,11 +36,19 @@ const FREE_PREVIEW_COUNT = 2;
 const SUBSCRIBED_LIMIT = 10;
 
 export default function SeniorLivingDirectoryPage() {
+  const router = useRouter();
   const { user, isLoggedIn, isLoading: authLoading } = useAuth();
   const { t, language } = useLanguage();
   const [facilities, setFacilities] = useState<PublicFacility[]>([]);
   const [availableCities, setAvailableCities] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Enforce compulsory login
+  useEffect(() => {
+    if (!authLoading && !isLoggedIn) {
+      router.push('/login?redirect=/homes');
+    }
+  }, [authLoading, isLoggedIn, router]);
 
   const isSubscribed = isLoggedIn && !!user?.isSubscribed;
 
@@ -219,8 +228,16 @@ export default function SeniorLivingDirectoryPage() {
     setCurrentPage(1);
   }, [selectedCity, selectedCareType, maxPrice, sortBy]);
 
-
-
+  if (authLoading || !isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#E86A33]"></div>
+          <p className="text-xs font-semibold text-slate-500">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#FFFDFB] text-slate-900 flex flex-col justify-between selection:bg-[#E86A33] selection:text-white">
@@ -273,7 +290,7 @@ export default function SeniorLivingDirectoryPage() {
                 {/* MNC Authority Key Metrics Strip */}
                 <div className="pt-2 grid grid-cols-3 gap-3 max-w-lg">
                   <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-3 border border-slate-200/70 shadow-2xs">
-                    <p className="text-xl sm:text-2xl font-black text-slate-900 leading-tight">50+</p>
+                    <p className="text-xl sm:text-2xl font-black text-slate-900 leading-tight">10+</p>
                     <p className="text-[11px] font-semibold text-slate-500">Verified Homes in MH</p>
                   </div>
                   <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-3 border border-slate-200/70 shadow-2xs">
@@ -614,14 +631,14 @@ export default function SeniorLivingDirectoryPage() {
                       {/* CTA Button */}
                       <div className="pt-4 relative z-10 space-y-2 border-t border-orange-100 mt-4">
                         <Link
-                          href={isLoggedIn ? '/payment' : '/login'}
+                          href="/payment"
                           className="inline-flex items-center justify-center gap-2 w-full py-3.5 px-4 rounded-full bg-gradient-to-r from-[#E86A33] to-[#D85820] hover:brightness-105 text-white text-xs sm:text-sm font-black shadow-md shadow-orange-500/25 active:scale-98 transition-all cursor-pointer text-center"
                         >
                           <Sparkles className="w-4 h-4" />
-                          <span>{isLoggedIn ? 'Pay ₹999 & Unlock 10 Homes' : 'Sign In & Unlock 10 Homes (₹999 / 6 Mo)'}</span>
+                          <span>Pay ₹999 & Unlock 10 Homes</span>
                         </Link>
                         <p className="text-[10px] text-center text-slate-400 font-medium">
-                          {isLoggedIn ? 'Instant 6-month access across Maharashtra' : 'Already have access? Log in →'}
+                          Instant 6-month access across Maharashtra
                         </p>
                       </div>
                     </div>
@@ -638,7 +655,7 @@ export default function SeniorLivingDirectoryPage() {
                         <p className="text-xs text-slate-400">Unlock your pass to view full details and contact information.</p>
                       </div>
                       <Link
-                        href={isLoggedIn ? '/payment' : '/login'}
+                        href="/payment"
                         className="text-xs font-bold text-[#E86A33] hover:underline"
                       >
                         Unlock all →
@@ -716,7 +733,7 @@ export default function SeniorLivingDirectoryPage() {
                                   <p className="text-sm font-black text-slate-700">₹••,000 <span className="text-xs font-normal text-slate-400">/mo</span></p>
                                 </div>
                                 <Link
-                                  href={isLoggedIn ? '/payment' : '/login'}
+                                  href="/payment"
                                   className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-orange-50 hover:bg-orange-100 text-[#E86A33] text-xs font-bold border border-orange-200/80 transition-all cursor-pointer"
                                 >
                                   <Lock className="w-3 h-3" />
@@ -746,11 +763,11 @@ export default function SeniorLivingDirectoryPage() {
                       </div>
                     </div>
                     <Link
-                      href={isLoggedIn ? '/payment' : '/login'}
+                      href="/payment"
                       className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#E86A33] hover:bg-[#D85820] text-white text-xs font-bold shadow-md shrink-0 active:scale-98 transition-all cursor-pointer"
                     >
                       <Sparkles className="w-4 h-4" />
-                      <span>{isLoggedIn ? 'Unlock 10 Homes (₹999)' : 'Sign In & Unlock (₹999)'}</span>
+                      <span>Unlock 10 Homes (₹999)</span>
                     </Link>
                   </div>
                 </div>

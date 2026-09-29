@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import BrandLogo from '@/components/BrandLogo';
 import {
   Menu,
@@ -25,6 +25,7 @@ const LANGUAGES: Language[] = ['en', 'hi', 'mr'];
 
 export default function PublicNavbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const { t, language, setLanguage } = useLanguage();
@@ -209,7 +210,7 @@ export default function PublicNavbar() {
                   <div className="border-t border-slate-100 py-1.5">
                     <button
                       type="button"
-                      onClick={() => { logout(); setProfileOpen(false); }}
+                      onClick={() => { logout(); setProfileOpen(false); router.push('/login'); }}
                       className="flex items-center gap-3 px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50 transition-colors w-full cursor-pointer"
                     >
                       <LogOut className="w-4 h-4" />
@@ -311,7 +312,7 @@ export default function PublicNavbar() {
                     </div>
                     <button
                       type="button"
-                      onClick={() => { logout(); setMobileMenuOpen(false); }}
+                      onClick={() => { logout(); setMobileMenuOpen(false); router.push('/login'); }}
                       className="p-2 rounded-lg text-rose-500 hover:bg-rose-50 transition-colors cursor-pointer shrink-0"
                       aria-label="Logout"
                     >

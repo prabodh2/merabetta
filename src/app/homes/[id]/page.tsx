@@ -50,9 +50,17 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function FacilityDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const { user, isLoggedIn, isLoading: authLoading } = useAuth();
   const id = params?.id as string;
   const { t, language } = useLanguage();
+
+  // Enforce compulsory login
+  useEffect(() => {
+    if (!authLoading && !isLoggedIn) {
+      router.push(`/login?redirect=${encodeURIComponent(`/homes/${id}`)}`);
+    }
+  }, [authLoading, isLoggedIn, id, router]);
 
   const isSubscribed = isLoggedIn && !!user?.isSubscribed;
 
@@ -170,6 +178,17 @@ export default function FacilityDetailPage() {
   };
 
 
+
+  if (authLoading || !isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#E86A33]"></div>
+          <p className="text-xs font-semibold text-slate-500">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -398,18 +417,15 @@ export default function FacilityDetailPage() {
                   </div>
 
                   <Link
-                    href={isLoggedIn ? '/payment' : '/login'}
+                    href="/payment"
                     className="inline-flex items-center justify-center gap-2 w-full py-4 rounded-full bg-[#E86A33] hover:bg-[#D85820] text-white text-sm font-black shadow-lg active:scale-98 transition-all"
                   >
                     <Sparkles className="w-4 h-4" />
-                    {isLoggedIn ? 'Unlock Full Details — ₹999 / 6 Months' : 'Sign Up & Unlock Full Details'}
+                    Unlock Full Details — ₹999 / 6 Months
                   </Link>
 
                   <p className="text-[11px] text-slate-400">
                     ₹999 one-time · 6 months access · 10 verified homes included
-                    {!isLoggedIn && (
-                      <> · <Link href="/login" className="text-[#E86A33] font-bold hover:underline">Already have access? Login →</Link></>
-                    )}
                   </p>
                 </div>
               </div>

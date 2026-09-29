@@ -38,7 +38,9 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!authLoading && isLoggedIn) {
-      router.push('/homes');
+      const search = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+      const redirectParam = search?.get('redirect');
+      router.push(redirectParam || '/homes');
     }
   }, [isLoggedIn, authLoading, router]);
 
@@ -137,9 +139,13 @@ export default function LoginPage() {
       if (data.success && data.user) {
         login(data.token, data.user);
         setStep(3);
-        const destination = preferredArea.trim()
-          ? `/homes?city=${encodeURIComponent(preferredArea.trim().toLowerCase())}`
-          : '/homes';
+        const search = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+        const redirectParam = search?.get('redirect');
+        const destination = redirectParam
+          ? redirectParam
+          : preferredArea.trim()
+            ? `/homes?city=${encodeURIComponent(preferredArea.trim().toLowerCase())}`
+            : '/homes';
         setTimeout(() => {
           router.push(destination);
         }, 1200);
