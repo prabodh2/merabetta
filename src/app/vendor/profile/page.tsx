@@ -25,6 +25,29 @@ export default function VendorProfilePage() {
     if (!isLoading && !isLoggedIn) router.push('/vendor/login');
   }, [isLoading, isLoggedIn, router]);
 
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    const token = localStorage.getItem('merabetta-vendor-token');
+    if (!token) return;
+
+    fetch('/api/vendor/profile', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.profile) {
+          setTotalBeds(data.profile.totalBeds);
+          setAvailableBeds(data.profile.availableBeds);
+          if (data.profile.pricing) {
+            setPricing(data.profile.pricing);
+          }
+        }
+      })
+      .catch(() => {
+        // Keep defaults on error
+      });
+  }, [isLoggedIn]);
+
   const handleSave = async () => {
     if (availableBeds > totalBeds) {
       setError('Available beds cannot exceed total beds');

@@ -2,8 +2,9 @@ import { MongoClient, ObjectId } from 'mongodb';
 import { EnrollmentRecord, EnrollmentStatus, EnrollmentFormData } from '../types/enrollment';
 import clientPromise from './mongodb';
 import { flattenFormData } from '../utils/exportHelpers';
+import { migrateRegistrationToVendor, handleRegistrationRejection } from './vendorMigration';
 
-const DB_NAME = 'merabetta';
+const DB_NAME = process.env.MONGODB_DB || 'merabetta';
 const COLLECTION_NAME = process.env.MONGODB_COLLECTION || 'old age home registration';
 
 // Global in-memory cache for original records when MongoDB is not connected
@@ -356,6 +357,18 @@ export async function updateEnrollmentStatus(
       }
 
       await collection.updateOne(query, { $set: updateFields });
+
+      // Automatically sync with `vendor` and `audit_log` collections on approval / rejection
+      if (updates.status === 'approved') {
+        try {
+          await migrateRegistrationToVendor(idOrRef, updates.reviewedBy || 'Admin');
+        } catch (migErr) {
+          console.warn('[updateEnrollmentStatus] Vendor migration warning:', migErr);
+        }
+      } else if (updates.status === 'rejected') {
+        await handleRegistrationRejection(idOrRef, updates.reviewedBy || 'Admin', updates.adminNotes);
+      }
+
       return getEnrollmentById(idOrRef);
     } catch (err) {
       console.error('[updateEnrollmentStatus] MongoDB update failed:', err);

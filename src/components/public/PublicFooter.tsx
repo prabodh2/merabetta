@@ -4,19 +4,16 @@ import React from 'react';
 import Link from 'next/link';
 import BrandLogo from '@/components/BrandLogo';
 import {
-  Heart,
   PhoneCall,
   Mail,
   MapPin,
   ShieldCheck,
-  Building2,
-  ExternalLink,
   MessageCircle,
 } from 'lucide-react';
 
 export default function PublicFooter() {
   return (
-    <footer className="bg-white border-t border-slate-200 mt-20 pt-16 pb-12 text-slate-700">
+    <footer className="bg-white border-t border-slate-200 mt-12 sm:mt-20 pt-10 sm:pt-16 pb-10 sm:pb-12 text-slate-700">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-10">
           {/* Brand Col */}
@@ -129,9 +126,9 @@ export default function PublicFooter() {
         </div>
 
         {/* Bottom copyright */}
-        <div className="pt-8 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+        <div className="pt-8 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400 text-center sm:text-left">
           <p>© {new Date().getFullYear()} Vision55 Megacare Pvt Ltd (MeraBetta.com). All rights reserved.</p>
-          <div className="flex items-center gap-4 text-slate-500">
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-slate-500">
             <span>Privacy Policy</span>
             <span>•</span>
             <span>Terms of Service</span>

@@ -1,14 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
-import { SAMPLE_APPROVED_HOMES } from '@/utils/publicHomes';
 
-const globalStore = global as any;
+const DB_NAME = process.env.MONGODB_DB || 'merabetta';
+
+const globalStore = global as unknown as {
+  vendorSessions: Record<
+    string,
+    { expiresAt: Date; referenceId: string; facilityId: string; vendorId: string }
+  >;
+};
 if (!globalStore.vendorSessions) globalStore.vendorSessions = {};
 
 async function getVendorFromToken(token: string) {
   try {
     const client = await clientPromise;
-    const db = client.db();
+    const db = client.db(DB_NAME);
     const session = await db.collection('vendor_sessions').findOne({ token });
     if (session && session.expiresAt > new Date()) return session;
   } catch {}
@@ -32,7 +38,7 @@ export async function GET(request: NextRequest) {
     const { referenceId, facilityId } = session;
 
     // Fetch inquiries for this facility
-    let inquiries: any[] = [];
+    let inquiries: Record<string, unknown>[] = [];
 
     try {
       const client = await clientPromise;

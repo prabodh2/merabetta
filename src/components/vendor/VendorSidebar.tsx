@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { useVendorAuth } from '@/contexts/VendorAuthContext';
-import Image from 'next/image';
 
 const navItems = [
   { href: '/vendor', label: 'Dashboard', icon: LayoutDashboard, exact: true },
@@ -22,15 +21,18 @@ const navItems = [
   { href: '/vendor/profile', label: 'Edit Listing', icon: Settings },
 ];
 
-export default function VendorSidebar() {
-  const pathname = usePathname();
-  const { vendor, logout } = useVendorAuth();
-  const [mobileOpen, setMobileOpen] = useState(false);
+interface VendorNavContentProps {
+  pathname: string;
+  vendor: ReturnType<typeof useVendorAuth>['vendor'];
+  onNavigate: () => void;
+  onLogout: () => void;
+}
 
+function VendorNavContent({ pathname, vendor, onNavigate, onLogout }: VendorNavContentProps) {
   const isActive = (item: (typeof navItems)[0]) =>
     item.exact ? pathname === item.href : pathname.startsWith(item.href);
 
-  const NavContent = () => (
+  return (
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="px-5 py-5 border-b border-slate-100 flex items-center gap-3">
@@ -63,7 +65,7 @@ export default function VendorSidebar() {
             <Link
               key={item.href}
               href={item.href}
-              onClick={() => setMobileOpen(false)}
+              onClick={onNavigate}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                 active
                   ? 'bg-[#E86A33] text-white shadow-sm'
@@ -81,7 +83,7 @@ export default function VendorSidebar() {
       {/* Logout */}
       <div className="px-3 py-4 border-t border-slate-100">
         <button
-          onClick={() => logout()}
+          onClick={onLogout}
           className="flex items-center gap-3 px-3 py-2.5 w-full rounded-xl text-sm font-semibold text-rose-500 hover:bg-rose-50 transition-all cursor-pointer"
         >
           <LogOut className="w-4 h-4" />
@@ -90,12 +92,23 @@ export default function VendorSidebar() {
       </div>
     </div>
   );
+}
+
+export default function VendorSidebar() {
+  const pathname = usePathname();
+  const { vendor, logout } = useVendorAuth();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <>
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex flex-col w-60 shrink-0 bg-white border-r border-slate-200 min-h-screen sticky top-0">
-        <NavContent />
+        <VendorNavContent
+          pathname={pathname}
+          vendor={vendor}
+          onNavigate={() => setMobileOpen(false)}
+          onLogout={() => logout()}
+        />
       </aside>
 
       {/* Mobile Top Bar */}
@@ -121,8 +134,13 @@ export default function VendorSidebar() {
             className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="relative w-72 bg-white h-full overflow-y-auto shadow-2xl">
-            <NavContent />
+          <aside className="relative w-72 max-w-[85dvw] bg-white h-full overflow-y-auto overscroll-contain shadow-2xl">
+            <VendorNavContent
+              pathname={pathname}
+              vendor={vendor}
+              onNavigate={() => setMobileOpen(false)}
+              onLogout={() => logout()}
+            />
           </aside>
         </div>
       )}

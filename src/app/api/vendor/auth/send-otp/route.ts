@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
+import crypto from 'crypto';
 
-const globalStore = global as any;
+const DB_NAME = process.env.MONGODB_DB || 'merabetta';
+
+const globalStore = global as unknown as {
+  otpSessions: Record<string, Record<string, unknown>>;
+};
 if (!globalStore.otpSessions) globalStore.otpSessions = {};
 
 export async function POST(request: NextRequest) {
@@ -14,13 +19,33 @@ export async function POST(request: NextRequest) {
 
     // TODO: Replace with real OTP API once company provides it.
     const otp = '123456';
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+    const otpHash = crypto.createHash('sha256').update(otp).digest('hex');
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 5 * 60 * 1000);
 
-    const sessionData = { phone, otp, createdAt: new Date(), expiresAt, type: 'vendor' };
+    const sessionData: Record<string, unknown> = {
+      phone,
+      otp,
+      otp_hash: otpHash,
+      created_at: now,
+      createdAt: now,
+      expires_at: expiresAt,
+      expiresAt,
+      attempts: 0,
+      is_used: false,
+      type: 'vendor',
+    };
 
     try {
       const client = await clientPromise;
-      const db = client.db();
+      const db = client.db(DB_NAME);
+
+      // Link vendor_id (ObjectId reference to vendor._id) if vendor exists
+      const vendorDoc = await db.collection('vendor').findOne({ phone });
+      if (vendorDoc?._id) {
+        sessionData.vendor_id = vendorDoc._id;
+      }
+
       await db.collection('otp_sessions').updateOne(
         { phone, type: 'vendor' },
         { $set: sessionData },

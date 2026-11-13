@@ -1,9 +1,10 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useCallback, useSyncExternalStore } from 'react';
 import translations, { Language, Translations } from './translations';
 
 const LANG_STORAGE_KEY = 'merabetta_lang';
+const LANG_CHANGE_EVENT = 'merabetta-lang-change';
 
 interface LanguageContextValue {
   language: Language;
@@ -21,9 +22,13 @@ const LanguageContext = createContext<LanguageContextValue>({
 function detectLanguage(): Language {
   if (typeof window === 'undefined') return 'en';
 
-  // 1. Check persisted preference first
-  const stored = localStorage.getItem(LANG_STORAGE_KEY) as Language | null;
-  if (stored && ['en', 'mr', 'hi'].includes(stored)) return stored;
+  try {
+    // 1. Check persisted preference first
+    const stored = localStorage.getItem(LANG_STORAGE_KEY) as Language | null;
+    if (stored && ['en', 'mr', 'hi'].includes(stored)) return stored;
+  } catch {
+    // Ignore storage access errors
+  }
 
   // 2. Auto-detect from browser locale
   const locale = navigator.language || '';
@@ -33,23 +38,40 @@ function detectLanguage(): Language {
   return 'en';
 }
 
+function subscribeLanguage(callback: () => void) {
+  if (typeof window === 'undefined') return () => {};
+  window.addEventListener(LANG_CHANGE_EVENT, callback);
+  window.addEventListener('storage', callback);
+  return () => {
+    window.removeEventListener(LANG_CHANGE_EVENT, callback);
+    window.removeEventListener('storage', callback);
+  };
+}
+
+function getServerLanguageSnapshot(): Language {
+  return 'en';
+}
+
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguageState] = useState<Language>('en');
+  const language = useSyncExternalStore(
+    subscribeLanguage,
+    detectLanguage,
+    getServerLanguageSnapshot
+  );
 
-  // Hydrate language from browser on client only (avoids SSR mismatch)
+  // Sync <html lang> attribute whenever language changes
   useEffect(() => {
-    setLanguageState(detectLanguage());
-  }, []);
+    document.documentElement.lang = language === 'mr' ? 'mr' : language === 'hi' ? 'hi' : 'en';
+  }, [language]);
 
-  // Update <html lang> attribute and localStorage on change
+  // Update localStorage and notify subscribers on change
   const setLanguage = useCallback((lang: Language) => {
-    setLanguageState(lang);
     try {
       localStorage.setItem(LANG_STORAGE_KEY, lang);
+      window.dispatchEvent(new Event(LANG_CHANGE_EVENT));
     } catch {
       // Ignore quota errors
     }
-    // Update the html lang attribute for accessibility & SEO
     document.documentElement.lang = lang === 'mr' ? 'mr' : lang === 'hi' ? 'hi' : 'en';
   }, []);
 

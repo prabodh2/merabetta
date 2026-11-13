@@ -154,6 +154,7 @@ export default function SearchBar({
       const data = await res.json();
       if (data.success && Array.isArray(data.suggestions)) {
         setSuggestions(data.suggestions);
+        setHighlightedIdx(-1);
       }
     } catch {
       // Silently fail — suggestions are not critical
@@ -169,13 +170,9 @@ export default function SearchBar({
     }
 
     if (query.trim().length >= 2) {
-      setShowScopes(false);
       debounceRef.current = setTimeout(() => {
         fetchSuggestions(query.trim());
       }, 250);
-    } else {
-      setSuggestions([]);
-      setShowScopes(true);
     }
 
     return () => {
@@ -270,97 +267,108 @@ export default function SearchBar({
     [suggestions, highlightedIdx, handleSuggestionClick, handleSubmit]
   );
 
-  // Reset highlight when suggestions change
-  useEffect(() => {
-    setHighlightedIdx(-1);
-  }, [suggestions]);
-
   // ── Render ──────────────────────────────────────────────────────────────
 
   const isScoped = activeScope.id !== 'all';
 
   return (
-    <div ref={containerRef} className={`relative w-full ${className}`}>
+    <div ref={containerRef} className={`relative w-full min-w-0 ${className}`}>
       {/* ── Search Input Bar ── */}
       <div
-        className={`flex items-center gap-2 bg-white border-2 rounded-2xl px-4 py-3 transition-all duration-200 ${
+        className={`flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 bg-white border-2 rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 transition-all duration-200 ${
           isOpen
             ? 'border-[#E86A33] shadow-lg shadow-orange-100/50 ring-4 ring-[#E86A33]/10'
             : 'border-slate-200 shadow-sm hover:border-slate-300 hover:shadow-md'
         }`}
       >
-        {/* Search Icon */}
-        <Search
-          className={`w-5 h-5 shrink-0 transition-colors ${
-            isOpen ? 'text-[#E86A33]' : 'text-slate-400'
-          }`}
-        />
-
-        {/* Active Scope Chip */}
+        {/* Active Scope Chip — wraps onto its own top line on very narrow phones so input never gets crushed */}
         {isScoped && (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-orange-50 border border-orange-200 text-[11px] font-bold text-[#E86A33] shrink-0">
-            {activeScope.icon}
-            <span>{activeScope.label}</span>
+          <div className="w-full sm:w-auto flex items-center pb-1 sm:pb-0 border-b sm:border-b-0 border-slate-100">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-orange-50 border border-orange-200 text-[11px] font-bold text-[#E86A33] shrink-0">
+              {activeScope.icon}
+              <span>{activeScope.label}</span>
+              <button
+                type="button"
+                onClick={handleClearScope}
+                className="ml-0.5 text-orange-400 hover:text-orange-600 cursor-pointer"
+                aria-label="Clear search scope"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          </div>
+        )}
+
+        <div className="flex items-center gap-2 flex-1 min-w-0 w-full sm:w-auto">
+          {/* Search Icon */}
+          <Search
+            className={`w-4 h-4 sm:w-5 sm:h-5 shrink-0 transition-colors ${
+              isOpen ? 'text-[#E86A33]' : 'text-slate-400'
+            }`}
+          />
+
+          {/* Input */}
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={(e) => {
+              const nextVal = e.target.value;
+              setQuery(nextVal);
+              if (nextVal.trim().length >= 2) {
+                setShowScopes(false);
+              } else {
+                setSuggestions([]);
+                setHighlightedIdx(-1);
+                setShowScopes(true);
+              }
+            }}
+            onFocus={() => setIsOpen(true)}
+            onKeyDown={handleKeyDown}
+            placeholder={activeScope.placeholder}
+            className="flex-1 bg-transparent text-xs sm:text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none min-w-0"
+            autoComplete="off"
+            spellCheck={false}
+          />
+
+          {/* Clear */}
+          {query && (
             <button
               type="button"
-              onClick={handleClearScope}
-              className="ml-0.5 text-orange-400 hover:text-orange-600 cursor-pointer"
+              onClick={() => {
+                setQuery('');
+                setSuggestions([]);
+                setShowScopes(true);
+                inputRef.current?.focus();
+              }}
+              className="text-slate-400 hover:text-slate-600 cursor-pointer shrink-0 p-0.5"
+              aria-label="Clear search query"
             >
-              <X className="w-3 h-3" />
+              <X className="w-4 h-4" />
             </button>
-          </span>
-        )}
+          )}
 
-        {/* Input */}
-        <input
-          ref={inputRef}
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => setIsOpen(true)}
-          onKeyDown={handleKeyDown}
-          placeholder={activeScope.placeholder}
-          className="flex-1 bg-transparent text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none min-w-0"
-          autoComplete="off"
-          spellCheck={false}
-        />
-
-        {/* Clear / Loading */}
-        {query && (
+          {/* Search Button */}
           <button
             type="button"
-            onClick={() => {
-              setQuery('');
-              setSuggestions([]);
-              setShowScopes(true);
-              inputRef.current?.focus();
-            }}
-            className="text-slate-400 hover:text-slate-600 cursor-pointer shrink-0"
+            onClick={handleSubmit}
+            disabled={!query.trim() || isLoading}
+            className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-[#E86A33] hover:bg-[#D85820] active:scale-95 text-white text-xs font-black shadow-sm hover:shadow-md transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shrink-0"
           >
-            <X className="w-4 h-4" />
+            {isLoading ? (
+              <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Search className="w-3.5 h-3.5 stroke-[2.5]" />
+            )}
+            <span className="hidden sm:inline">Search</span>
           </button>
-        )}
-
-        {/* Search Button */}
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={!query.trim() || isLoading}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#E86A33] hover:bg-[#D85820] active:scale-95 text-white text-xs font-black shadow-sm hover:shadow-md transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shrink-0"
-        >
-          {isLoading ? (
-            <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <Search className="w-3.5 h-3.5 stroke-[2.5]" />
-          )}
-          <span className="hidden sm:inline">Search</span>
-        </button>
+        </div>
       </div>
 
       {/* ── Dropdown Panel ── */}
       {isOpen && (
         <div
-          className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl border border-slate-200 shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
+          className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl border border-slate-200 shadow-2xl z-50 max-h-[65dvh] overflow-y-auto overscroll-contain animate-in fade-in slide-in-from-top-2 duration-200"
           style={{
             animation: 'searchDropdownIn 200ms ease-out forwards',
           }}

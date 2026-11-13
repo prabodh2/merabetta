@@ -14,7 +14,6 @@ import {
   User,
   LogOut,
   Heart,
-  Settings,
   MessageCircle,
 } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -47,32 +46,28 @@ export default function PublicNavbar() {
 
   const navLinks = [
     { label: t.directory.nav.browseHomes, href: '/homes', isCurrent: pathname === '/homes' || pathname?.startsWith('/homes') },
-    { label: t.directory.nav.assistedLiving, href: '/homes?careType=assisted_living', isCurrent: false },
+    { label: 'Products & Categories', href: '/products', isCurrent: pathname === '/products' || pathname?.startsWith('/products') },
+    { label: t.directory.nav.assistedLiving, href: '/homes?careType=assisted', isCurrent: false },
     { label: t.directory.nav.palliativeCare, href: '/homes?careType=palliative', isCurrent: false },
     { label: t.directory.nav.dementiaCare, href: '/homes?careType=dementia', isCurrent: false },
   ];
 
-  // Mask phone: 89291***29
-  const maskedPhone = user?.phone
-    ? user.phone.slice(-10, -7) + '****' + user.phone.slice(-2)
-    : '';
-
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs transition-all">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-18 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs transition-all">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-18 flex items-center justify-between gap-2 sm:gap-4 min-w-0">
 
         {/* ─── Left: Logo ─── */}
-        <Link href="/homes" className="flex items-center gap-2 group transition-transform active:scale-98 shrink-0">
+        <Link href="/homes" className="flex items-center gap-1.5 sm:gap-2 group transition-transform active:scale-98 shrink-0 min-w-0">
           <BrandLogo size="sm" variant="icon" />
           <img
             src="/merabetta_wordmark.svg"
             alt="merabetta.com"
-            className="h-4 sm:h-[18px] w-auto object-contain"
+            className="h-3.5 sm:h-[18px] w-auto object-contain"
           />
         </Link>
 
         {/* ─── Center: Desktop Navigation ─── */}
-        <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1">
+        <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1 min-w-0">
           {navLinks.map((item) => (
             <Link
               key={item.label}
@@ -89,16 +84,16 @@ export default function PublicNavbar() {
         </nav>
 
         {/* ─── Right: Actions ─── */}
-        <div className="flex items-center gap-2 xl:gap-3 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 xl:gap-3 shrink-0">
 
-          {/* Language Switcher */}
-          <div className="hidden sm:flex items-center bg-slate-100 rounded-xl p-0.5 border border-slate-200/60 shrink-0">
+          {/* Language Switcher — visible on all screens with compact mobile sizing */}
+          <div className="flex items-center bg-slate-100 rounded-xl p-0.5 border border-slate-200/60 shrink-0">
             {LANGUAGES.map((lang) => (
               <button
                 key={lang}
                 type="button"
                 onClick={() => setLanguage(lang)}
-                className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                className={`px-1.5 sm:px-2 py-1 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer ${
                   language === lang
                     ? 'bg-[#E86A33] text-white shadow-xs'
                     : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'
@@ -246,7 +241,7 @@ export default function PublicNavbar() {
 
       {/* ─── Mobile Drawer ─── */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-white border-b border-slate-200 px-4 pt-3 pb-6 space-y-3 shadow-lg animate-in slide-in-from-top-2 duration-200">
+        <div className="lg:hidden bg-white border-b border-slate-200 px-4 pt-3 pb-6 space-y-3 shadow-lg max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain animate-in slide-in-from-top-2 duration-200">
           {/* Mobile Language Switcher */}
           <div className="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-200/60">
             <span className="text-xs font-bold text-slate-600 flex items-center gap-1.5">

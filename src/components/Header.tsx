@@ -2,7 +2,8 @@
 
 import React from 'react';
 import BrandLogo from './BrandLogo';
-import { Building2, MapPin, CheckCircle2, PhoneCall, Mail } from 'lucide-react';
+import Link from 'next/link';
+import { Building2, MapPin, CheckCircle2, PhoneCall, Mail, ShoppingBag } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import { Language, LANGUAGE_LABELS } from '../i18n/translations';
 
@@ -44,6 +45,15 @@ export default function Header({ lastSavedTime }: HeaderProps) {
                 </button>
               ))}
             </div>
+
+            {/* Products & Catalog Link Button */}
+            <Link
+              href="/products"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 hover:bg-[#E86A33] text-[#E86A33] hover:text-white border border-orange-200/80 rounded-lg text-xs font-bold transition-all shadow-2xs"
+            >
+              <ShoppingBag className="w-3.5 h-3.5" />
+              <span>Products & Categories</span>
+            </Link>
 
             {lastSavedTime && (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 text-slate-600 border border-slate-200 rounded-md text-xs font-medium">
@@ -97,9 +107,9 @@ export default function Header({ lastSavedTime }: HeaderProps) {
         </div>
 
         {/* Google Form Style Required Notice */}
-        <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+        <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
           <p className="text-slate-500">{t.header.instructions}</p>
-          <span className="text-rose-600 font-medium whitespace-nowrap ml-2">
+          <span className="text-rose-600 font-medium whitespace-nowrap">
             {t.header.required}
           </span>
         </div>

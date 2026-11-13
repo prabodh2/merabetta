@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import PublicNavbar from '@/components/public/PublicNavbar';
@@ -16,25 +16,16 @@ import {
   Hospital,
   HeartPulse,
   IndianRupee,
-  Calendar,
-  Clock,
   CheckCircle2,
   PhoneCall,
   MessageCircle,
   ExternalLink,
   Building2,
-  User,
   Coffee,
-  Heart,
   Activity,
-  Bed,
   Check,
-  FileCheck,
   AlertCircle,
   Share2,
-  Copy,
-  ChevronRight,
-  Info,
   Lock,
   Sparkles,
   Stethoscope,
@@ -53,7 +44,7 @@ export default function FacilityDetailPage() {
   const router = useRouter();
   const { user, isLoggedIn, isLoading: authLoading } = useAuth();
   const id = params?.id as string;
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
 
   // Enforce compulsory login
   useEffect(() => {
@@ -107,31 +98,41 @@ export default function FacilityDetailPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Fetch Facility
-  const fetchFacility = useCallback(async () => {
-    if (!id) return;
-    setIsLoading(true);
-    setErrorMsg(null);
-    try {
-      const res = await fetch(`/api/homes/${id}`);
-      const data = await res.json();
-      if (data.success && data.facility) {
-        setFacility(data.facility);
-        if (data.isFreePreview || (data.facility as any).isFreePreview) {
-          setIsFreePreview(true);
-        }
-      } else {
-        setErrorMsg(data.error || 'Facility details could not be found.');
-      }
-    } catch {
-      setErrorMsg('Failed to fetch facility profile. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [id]);
-
   useEffect(() => {
-    fetchFacility();
-  }, [fetchFacility]);
+    if (!id) return;
+    let cancelled = false;
+    async function loadFacility() {
+      setIsLoading(true);
+      setErrorMsg(null);
+      try {
+        const res = await fetch(`/api/homes/${id}`);
+        const data = await res.json();
+        if (!cancelled) {
+          if (data.success && data.facility) {
+            setFacility(data.facility);
+            const fac = data.facility as PublicFacility & { isFreePreview?: boolean };
+            if (data.isFreePreview || fac.isFreePreview) {
+              setIsFreePreview(true);
+            }
+          } else {
+            setErrorMsg(data.error || 'Facility details could not be found.');
+          }
+        }
+      } catch {
+        if (!cancelled) {
+          setErrorMsg('Failed to fetch facility profile. Please try again.');
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+    loadFacility();
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
 
   const handleInquirySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -232,20 +233,20 @@ export default function FacilityDetailPage() {
   )}`;
 
   return (
-    <div className="min-h-screen bg-[#FFFDFB] text-slate-900 flex flex-col justify-between selection:bg-[#E86A33] selection:text-white">
+    <div className="min-h-screen bg-[#FFFDFB] text-slate-900 flex flex-col justify-between selection:bg-[#E86A33] selection:text-white overflow-x-clip">
       <div>
         <PublicNavbar />
 
-        {/* ── BACK NAVIGATION BAR ── */}
-        <div className="border-b border-slate-100 bg-white/80 backdrop-blur-sm sticky top-0 z-40">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center">
+        {/* ── BACK NAVIGATION BAR (Sticks below PublicNavbar) ── */}
+        <div className="border-b border-slate-100 bg-white/85 backdrop-blur-sm sticky top-16 sm:top-18 z-30">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 flex items-center">
             <button
               type="button"
               onClick={() => {
                 if (window.history.length > 1) {
                   window.history.back();
                 } else {
-                  window.location.href = '/homes';
+                  router.push('/homes');
                 }
               }}
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-[#E86A33] to-[#D85820] text-white text-xs font-bold shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-95 transition-all duration-200 cursor-pointer"
@@ -257,10 +258,10 @@ export default function FacilityDetailPage() {
         </div>
 
         {/* ── BREADCRUMBS & TOP CONTROLS ── */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 pb-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-5 pb-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
             {/* Breadcrumb links */}
-            <div className="flex items-center gap-1.5 text-slate-500 flex-wrap">
+            <div className="flex items-center gap-1.5 text-slate-500 flex-wrap min-w-0">
               <Link href="/homes" className="hover:text-[#E86A33] font-semibold transition-colors">
                 {t.detail.breadcrumbs.homes}
               </Link>
@@ -269,11 +270,11 @@ export default function FacilityDetailPage() {
                 {facility.city}
               </Link>
               <span>/</span>
-              <span className="font-bold text-slate-900 truncate max-w-xs">{facility.name}</span>
+              <span className="font-bold text-slate-900 truncate max-w-[200px] sm:max-w-xs">{facility.name}</span>
             </div>
 
             {/* Share */}
-            <div className="flex items-center gap-2 self-end sm:self-auto">
+            <div className="flex items-center gap-2 shrink-0">
               <button
                 type="button"
                 onClick={handleShare}
@@ -287,13 +288,13 @@ export default function FacilityDetailPage() {
         </div>
 
         {/* ── FACILITY TITLE & SUMMARY HEADER ── */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pb-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2 flex-wrap mb-1">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap mb-1.5">
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-extrabold">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                  {t.detail.verifiedFacility}
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>{t.detail.verifiedFacility}</span>
                 </span>
                 {isFreePreview && !isSubscribed && (
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-600 text-white text-[11px] font-black uppercase tracking-wider shadow-xs">
@@ -306,21 +307,23 @@ export default function FacilityDetailPage() {
                 <span className="text-[11px] text-slate-400 font-medium">{t.detail.est} {facility.yearEstablished}</span>
               </div>
 
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight">
+              <h1 className="text-xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight break-words">
                 {facility.name}
               </h1>
 
-              <p className="text-xs sm:text-sm text-slate-500 mt-1 flex items-center gap-1.5">
-                <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
-                <span>{facility.address}, {facility.city}, {facility.state} - {facility.pinCode}</span>
-                <span className="text-slate-300">•</span>
-                <span className="text-[#E86A33] font-semibold">{facility.distanceLandmark}</span>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1 flex flex-wrap items-center gap-1.5">
+                <span className="inline-flex items-center gap-1">
+                  <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
+                  <span>{facility.address}, {facility.city}, {facility.state} - {facility.pinCode}</span>
+                </span>
+                <span className="text-slate-300 hidden sm:inline">•</span>
+                <span className="text-[#E86A33] font-semibold bg-orange-50 sm:bg-transparent px-2 sm:px-0 py-0.5 sm:py-0 rounded-full">{facility.distanceLandmark}</span>
               </p>
             </div>
 
             {/* Star Rating Badge */}
-            <div className="flex items-center gap-2 self-start md:self-center bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-black text-base">
+            <div className="flex items-center gap-2 self-start md:self-center bg-white p-2.5 sm:p-3 rounded-2xl border border-slate-200 shadow-2xs shrink-0">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-black text-base">
                 <Star className="w-5 h-5 fill-amber-400 stroke-amber-500" />
               </div>
               <div>
@@ -332,9 +335,9 @@ export default function FacilityDetailPage() {
         </div>
 
         {/* ── AIRBNB / OYO 5-PHOTO MOSAIC SHOWCASE ── */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+        <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pb-6 sm:pb-8">
           <div className="relative rounded-3xl overflow-hidden shadow-md border border-slate-200/90 bg-slate-100">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-2 aspect-16/11 sm:aspect-16/9 md:aspect-21/9 max-h-[520px]">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-2 aspect-16/10 sm:aspect-16/9 md:aspect-21/9 max-h-[520px]">
               {/* Main Big Photo (Left 2 cols) */}
               <div
                 onClick={() => setActivePhotoLightboxIdx(0)}
@@ -371,7 +374,7 @@ export default function FacilityDetailPage() {
             <button
               type="button"
               onClick={() => setActivePhotoLightboxIdx(0)}
-              className="absolute bottom-4 right-4 inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/95 hover:bg-white text-slate-800 text-xs font-bold shadow-lg backdrop-blur-md transition-all cursor-pointer hover:scale-103 active:scale-98"
+              className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-full bg-white/95 hover:bg-white text-slate-800 text-xs font-bold shadow-lg backdrop-blur-md transition-all cursor-pointer hover:scale-103 active:scale-98"
             >
               <span>{t.detail.viewPhotos(photos.length)}</span>
             </button>
@@ -380,48 +383,51 @@ export default function FacilityDetailPage() {
 
         {/* ── PAYWALL — shown for non-subscribed visitors on locked homes ── */}
         {!canViewFull ? (
-          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-            <div className="relative">
-              {/* Blurred ghost content */}
-              <div className="blur-sm pointer-events-none select-none opacity-50 space-y-6" aria-hidden="true">
+          <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pb-16">
+            <div className="relative rounded-3xl overflow-hidden">
+              {/* Blurred ghost content in background */}
+              <div className="absolute inset-0 blur-sm pointer-events-none select-none opacity-45 space-y-6 overflow-hidden" aria-hidden="true">
                 <div className="bg-white rounded-3xl border border-slate-200 p-6 h-32" />
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 p-6 h-64" />
-                  <div className="bg-white rounded-3xl border border-slate-200 p-6 h-64" />
+                  <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 p-6 h-80" />
+                  <div className="bg-white rounded-3xl border border-slate-200 p-6 h-80" />
                 </div>
               </div>
 
-              {/* Paywall card */}
-              <div className="absolute inset-0 flex items-start justify-center pt-8 px-4" style={{ background: 'linear-gradient(to bottom, rgba(255,253,251,0.5) 0%, rgba(255,253,251,0.98) 30%)' }}>
-                <div className="bg-white rounded-3xl border border-orange-200/80 shadow-2xl p-8 sm:p-10 max-w-md w-full text-center space-y-5">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[#E86A33] to-[#D85820] rounded-2xl flex items-center justify-center mx-auto shadow-lg">
-                    <Lock className="w-7 h-7 text-white" />
+              {/* Paywall card in normal flow so it never clips on mobile */}
+              <div
+                className="relative z-10 flex items-center justify-center py-6 sm:py-10 px-2 sm:px-4"
+                style={{ background: 'linear-gradient(to bottom, rgba(255,253,251,0.55) 0%, rgba(255,253,251,0.96) 30%)' }}
+              >
+                <div className="bg-white rounded-3xl border border-orange-200/80 shadow-2xl p-5 sm:p-8 md:p-10 max-w-md w-full text-center space-y-5">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-[#E86A33] to-[#D85820] rounded-2xl flex items-center justify-center mx-auto shadow-lg">
+                    <Lock className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                   </div>
                   <div>
-                    <p className="text-xs font-extrabold uppercase tracking-wider text-[#E86A33] mb-2">Full Details Locked</p>
+                    <p className="text-xs font-extrabold uppercase tracking-wider text-[#E86A33] mb-1.5">Full Details Locked</p>
                     <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                       Unlock {facility.name}
                     </h3>
-                    <p className="text-sm text-slate-500 font-medium mt-2 leading-relaxed">
+                    <p className="text-xs sm:text-sm text-slate-500 font-medium mt-2 leading-relaxed">
                       Get direct contact, room pricing, doctor info, bed availability, and visit scheduling — all in one place.
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2.5 text-left text-xs font-semibold text-slate-600">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-left text-xs font-semibold text-slate-600 bg-slate-50/80 p-3.5 rounded-2xl border border-slate-100">
                     {['Direct Owner Contact', 'Room Pricing & Beds', 'Doctor On-Call Info', 'Schedule a Visit', 'Care Level Details', '10 Homes Access'].map((f) => (
                       <div key={f} className="flex items-center gap-2">
                         <span className="w-4 h-4 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-[10px] font-black shrink-0">✓</span>
-                        {f}
+                        <span>{f}</span>
                       </div>
                     ))}
                   </div>
 
                   <Link
                     href="/payment"
-                    className="inline-flex items-center justify-center gap-2 w-full py-4 rounded-full bg-[#E86A33] hover:bg-[#D85820] text-white text-sm font-black shadow-lg active:scale-98 transition-all"
+                    className="inline-flex items-center justify-center gap-2 w-full py-3.5 sm:py-4 px-4 rounded-full bg-[#E86A33] hover:bg-[#D85820] text-white text-xs sm:text-sm font-black shadow-lg active:scale-98 transition-all"
                   >
-                    <Sparkles className="w-4 h-4" />
-                    Unlock Full Details — ₹999 / 6 Months
+                    <Sparkles className="w-4 h-4 shrink-0" />
+                    <span>Unlock Full Details — ₹999 / 6 Months</span>
                   </Link>
 
                   <p className="text-[11px] text-slate-400">
@@ -434,14 +440,14 @@ export default function FacilityDetailPage() {
         ) : (
           <>
           {/* ── VERIFIED CREDENTIALS TRUST STRIP ── */}
-          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+          <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pb-6 sm:pb-8">
           <div className="bg-gradient-to-r from-emerald-50 via-teal-50/40 to-slate-50 rounded-2xl border border-emerald-200/80 p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-2xs">
-            <div className="flex items-center gap-3.5">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
-                <ShieldCheck className="w-7 h-7" />
+            <div className="flex items-start sm:items-center gap-3.5">
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                <ShieldCheck className="w-6 h-6 sm:w-7 sm:h-7" />
               </div>
-              <div>
-                <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+              <div className="min-w-0">
+                <h3 className="text-sm font-black text-slate-900 flex flex-wrap items-center gap-2">
                   <span>{t.detail.standardsTitle}</span>
                   <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">
                     {t.detail.officialPartner}
@@ -454,31 +460,31 @@ export default function FacilityDetailPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold text-emerald-800">
-              <span className="bg-white px-3 py-1 rounded-lg border border-emerald-200 flex items-center gap-1 shadow-2xs">
-                <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
-                {t.detail.fireSafety}
+              <span className="bg-white px-2.5 sm:px-3 py-1 rounded-lg border border-emerald-200 flex items-center gap-1 shadow-2xs">
+                <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3] shrink-0" />
+                <span>{t.detail.fireSafety}</span>
               </span>
-              <span className="bg-white px-3 py-1 rounded-lg border border-emerald-200 flex items-center gap-1 shadow-2xs">
-                <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
-                {t.detail.cctv}
+              <span className="bg-white px-2.5 sm:px-3 py-1 rounded-lg border border-emerald-200 flex items-center gap-1 shadow-2xs">
+                <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3] shrink-0" />
+                <span>{t.detail.cctv}</span>
               </span>
-              <span className="bg-white px-3 py-1 rounded-lg border border-emerald-200 flex items-center gap-1 shadow-2xs">
-                <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
-                {t.detail.registeredDoctors}
+              <span className="bg-white px-2.5 sm:px-3 py-1 rounded-lg border border-emerald-200 flex items-center gap-1 shadow-2xs">
+                <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3] shrink-0" />
+                <span>{t.detail.registeredDoctors}</span>
               </span>
             </div>
           </div>
         </section>
 
         {/* ── TWO-COLUMN CONTENT & BOOKING CONTAINER ── */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pb-16">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
             {/* ════════ LEFT COLUMN: Full Details (8 Cols) ════════ */}
-            <div className="lg:col-span-8 space-y-8">
+            <div className="lg:col-span-8 min-w-0 space-y-6 sm:space-y-8">
               {/* Section 1: Overview & About */}
-              <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-4">
+              <div className="bg-white rounded-3xl border border-slate-200/80 p-5 sm:p-8 shadow-xs space-y-4">
                 <div className="flex items-center gap-2 text-xs font-extrabold text-[#E86A33] uppercase tracking-wider">
-                  <Building2 className="w-4 h-4" />
+                  <Building2 className="w-4 h-4 shrink-0" />
                   <span>{t.detail.overviewBadge}</span>
                 </div>
                 <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
@@ -487,34 +493,34 @@ export default function FacilityDetailPage() {
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                   {t.detail.aboutDesc(facility.yearEstablished, facility.name, facility.city)}
                 </p>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-                  <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 text-center">
-                    <span className="text-[11px] text-slate-400 font-semibold block uppercase">{t.detail.totalBeds}</span>
-                    <span className="text-lg font-black text-slate-900 mt-0.5">{facility.capacity}</span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 pt-2">
+                  <div className="bg-slate-50 p-3 sm:p-3.5 rounded-2xl border border-slate-100 text-center">
+                    <span className="text-[10px] sm:text-[11px] text-slate-400 font-semibold block uppercase">{t.detail.totalBeds}</span>
+                    <span className="text-base sm:text-lg font-black text-slate-900 mt-0.5">{facility.capacity}</span>
                   </div>
-                  <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 text-center">
-                    <span className="text-[11px] text-slate-400 font-semibold block uppercase">{t.detail.residents}</span>
-                    <span className="text-lg font-black text-emerald-700 mt-0.5">{facility.currentResidents}</span>
+                  <div className="bg-slate-50 p-3 sm:p-3.5 rounded-2xl border border-slate-100 text-center">
+                    <span className="text-[10px] sm:text-[11px] text-slate-400 font-semibold block uppercase">{t.detail.residents}</span>
+                    <span className="text-base sm:text-lg font-black text-emerald-700 mt-0.5">{facility.currentResidents}</span>
                   </div>
-                  <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 text-center">
-                    <span className="text-[11px] text-slate-400 font-semibold block uppercase">{t.detail.careRatio}</span>
-                    <span className="text-lg font-black text-slate-900 mt-0.5">1:3</span>
+                  <div className="bg-slate-50 p-3 sm:p-3.5 rounded-2xl border border-slate-100 text-center">
+                    <span className="text-[10px] sm:text-[11px] text-slate-400 font-semibold block uppercase">{t.detail.careRatio}</span>
+                    <span className="text-base sm:text-lg font-black text-slate-900 mt-0.5">1:3</span>
                   </div>
-                  <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 text-center">
-                    <span className="text-[11px] text-slate-400 font-semibold block uppercase">{t.detail.emergency}</span>
-                    <span className="text-lg font-black text-[#E86A33] mt-0.5">24/7 ICU</span>
+                  <div className="bg-slate-50 p-3 sm:p-3.5 rounded-2xl border border-slate-100 text-center">
+                    <span className="text-[10px] sm:text-[11px] text-slate-400 font-semibold block uppercase">{t.detail.emergency}</span>
+                    <span className="text-base sm:text-lg font-black text-[#E86A33] mt-0.5">24/7 ICU</span>
                   </div>
                 </div>
               </div>
 
               {/* Section 2: Room & Accommodation Options */}
-              <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-5">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="bg-white rounded-3xl border border-slate-200/80 p-5 sm:p-8 shadow-xs space-y-5">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
                   <div>
                     <h3 className="text-lg font-black text-slate-900">{t.detail.tariffsTitle}</h3>
                     <p className="text-xs text-slate-500">{t.detail.tariffsSubtitle}</p>
                   </div>
-                  <span className="text-[11px] font-bold text-[#E86A33] bg-orange-50 px-2.5 py-1 rounded-full">
+                  <span className="text-[11px] font-bold text-[#E86A33] bg-orange-50 px-2.5 py-1 rounded-full shrink-0">
                     {t.detail.allInclusiveMeals}
                   </span>
                 </div>
@@ -732,10 +738,10 @@ export default function FacilityDetailPage() {
             </div>
 
             {/* ════════ RIGHT COLUMN: Sticky Booking Widget (4 Cols) ════════ */}
-            <div className="lg:col-span-4 lg:sticky lg:top-24 space-y-4">
-              <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xl space-y-5">
+            <div className="lg:col-span-4 min-w-0 lg:sticky lg:top-32 space-y-4">
+              <div className="bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-6 shadow-xl space-y-5">
                 {/* Tariff Highlight */}
-                <div className="flex items-baseline justify-between pb-4 border-b border-slate-100">
+                <div className="flex flex-wrap items-baseline justify-between gap-2 pb-4 border-b border-slate-100">
                   <div>
                     <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
                       {t.detail.startingFee}
@@ -746,7 +752,7 @@ export default function FacilityDetailPage() {
                       <span className="text-xs text-slate-400 font-semibold ml-1">{t.detail.perMonth}</span>
                     </div>
                   </div>
-                  <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-extrabold">
+                  <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-extrabold shrink-0">
                     {t.detail.zeroBrokerage}
                   </span>
                 </div>

@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     try {
       const client = await clientPromise;
-      const db = client.db();
+      const db = client.db(process.env.MONGODB_DB || 'merabetta');
       
       await db.collection('otp_sessions').updateOne(
         { phone },

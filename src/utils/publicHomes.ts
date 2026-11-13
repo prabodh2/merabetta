@@ -104,16 +104,16 @@ export function transformRecordToPublicFacility(
   };
 
   const pAssisted = {
-    from: parseNum(pricingData.assistedLiving?.from || 15000),
-    to: parseNum(pricingData.assistedLiving?.to || 22000),
+    from: parseNum(pricingData.assistedLiving?.from || fd.priceMin || 15000),
+    to: parseNum(pricingData.assistedLiving?.to || (fd.priceMin ? Number(fd.priceMin) + 7000 : 22000)),
   };
   const pHospital = {
-    from: parseNum(pricingData.homeHospital?.from || 25000),
-    to: parseNum(pricingData.homeHospital?.to || 35000),
+    from: parseNum(pricingData.homeHospital?.from || fd.privateRoomPrice || 25000),
+    to: parseNum(pricingData.homeHospital?.to || (fd.privateRoomPrice ? Number(fd.privateRoomPrice) + 10000 : 35000)),
   };
   const pPalliative = {
-    from: parseNum(pricingData.palliativeCare?.from || 22000),
-    to: parseNum(pricingData.palliativeCare?.to || 30000),
+    from: parseNum(pricingData.palliativeCare?.from || fd.dementiaPrice || 22000),
+    to: parseNum(pricingData.palliativeCare?.to || (fd.dementiaPrice ? Number(fd.dementiaPrice) + 8000 : 30000)),
   };
   const pIndependent = {
     from: parseNum(pricingData.independentLiving?.from || 12000),
@@ -158,8 +158,13 @@ export function transformRecordToPublicFacility(
     pinCode: fd.pinCode || '411001',
     yearEstablished: fd.yearEstablished || '2019',
     organizationType: fd.organizationType || 'Private',
-    capacity: parseInt(fd.totalCapacity || '25', 10) || 25,
-    currentResidents: parseInt(fd.currentResidents || '18', 10) || 18,
+    capacity: parseInt(String(fd.totalCapacity || fd.totalBeds || '25'), 10) || 25,
+    currentResidents:
+      fd.currentResidents !== undefined && fd.currentResidents !== ''
+        ? parseInt(String(fd.currentResidents), 10) || 0
+        : fd.totalBeds !== undefined && fd.availableBeds !== undefined
+          ? Math.max(0, Number(fd.totalBeds) - Number(fd.availableBeds))
+          : 18,
     contactPerson: fd.ownerName || fd.contactPersonName || 'Care Coordinator',
     contactPhone: fd.ownerPhone || fd.mobileNumber || '+919371458326',
     website: fd.website || '',

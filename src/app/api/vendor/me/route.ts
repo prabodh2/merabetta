@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 
-const globalStore = global as any;
+const DB_NAME = process.env.MONGODB_DB || 'merabetta';
+const COLLECTION_NAME = process.env.MONGODB_COLLECTION || 'old age home registration';
+
+const globalStore = global as unknown as {
+  vendorSessions: Record<string, { expiresAt: Date; vendor: Record<string, unknown> }>;
+};
 if (!globalStore.vendorSessions) globalStore.vendorSessions = {};
 
 export async function GET(request: NextRequest) {
@@ -12,36 +17,67 @@ export async function GET(request: NextRequest) {
     }
 
     const token = authHeader.split(' ')[1];
-    let sessionData: any = null;
+    let sessionData: Record<string, unknown> | null = null;
 
     // Try MongoDB first
     try {
       const client = await clientPromise;
-      const db = client.db();
+      const db = client.db(DB_NAME);
       const session = await db.collection('vendor_sessions').findOne({ token });
       if (session && session.expiresAt > new Date()) {
-        // Re-fetch vendor data
-        const enrollmentDb = client.db('merabetta');
-        let enrollment: any = null;
+        // Check `vendor` collection and `old age home registration`
+        const vendorDoc = await db.collection('vendor').findOne({
+          $or: [
+            { user_id: session.vendorId },
+            { registration_reference: session.referenceId },
+            { phone: session.phone },
+          ],
+        });
+
+        let enrollment: Record<string, unknown> | null = null;
         try {
           const { ObjectId } = await import('mongodb');
-          enrollment = await enrollmentDb.collection('old age home registration').findOne({
-            _id: new ObjectId(session.facilityId),
-          });
+          const facId = vendorDoc?.registration_id || session.facilityId;
+          if (ObjectId.isValid(facId)) {
+            enrollment = await db.collection(COLLECTION_NAME).findOne({
+              _id: new ObjectId(facId),
+            });
+          }
         } catch {
-          enrollment = await enrollmentDb.collection('old age home registration').findOne({
+          // ignore ObjectId parse error
+        }
+
+        if (!enrollment && session.referenceId) {
+          enrollment = await db.collection(COLLECTION_NAME).findOne({
             referenceId: session.referenceId,
           });
         }
 
+        const fullData = (enrollment?.fullData || {}) as Record<string, string>;
+
         sessionData = {
-          id: session.vendorId,
-          phone: session.phone,
-          name: enrollment?.fullData?.contactPersonName || 'Vendor',
-          facilityId: session.facilityId,
-          facilityName: enrollment?.fullData?.homeName || 'Senior Living Facility',
-          facilityCity: enrollment?.fullData?.city || '',
-          referenceId: session.referenceId,
+          id: vendorDoc?.user_id || session.vendorId,
+          phone: vendorDoc?.phone || session.phone,
+          name:
+            vendorDoc?.vendor_name ||
+            fullData.contactPersonName ||
+            'Vendor',
+          facilityId:
+            enrollment?._id?.toString() ||
+            vendorDoc?.registration_id?.toString() ||
+            session.facilityId,
+          facilityName:
+            vendorDoc?.business_name ||
+            fullData.homeName ||
+            'Senior Living Facility',
+          facilityCity:
+            vendorDoc?.location?.city ||
+            fullData.city ||
+            '',
+          referenceId:
+            vendorDoc?.registration_reference ||
+            enrollment?.referenceId ||
+            session.referenceId,
         };
       }
     } catch {

@@ -20,11 +20,11 @@ export default function ProgressBar({ currentStep, onStepClick, completedSteps }
   return (
     <div className="w-full bg-white rounded-xl border border-slate-200 shadow-xs p-4 sm:p-5">
       {/* Mobile view progress text */}
-      <div className="flex items-center justify-between text-xs font-semibold text-slate-600 mb-2">
-        <span className="text-[#E86A33] font-bold">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-slate-600 mb-2">
+        <span className="text-[#E86A33] font-bold min-w-0 truncate">
           {t.progress.stepOf(currentStep, steps.length)} {steps[currentStep - 1].title}
         </span>
-        <span className="text-slate-500 font-medium">{percentage}{t.progress.completed}</span>
+        <span className="text-slate-500 font-medium shrink-0">{percentage}{t.progress.completed}</span>
       </div>
 
       {/* Progress Bar Track */}

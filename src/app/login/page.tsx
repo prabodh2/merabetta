@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   RefreshCw,
   MapPin,
-  Sparkles,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import BrandLogo from '@/components/BrandLogo';
@@ -86,7 +85,7 @@ export default function LoginPage() {
       } else {
         setError(data.error || 'Failed to send OTP');
       }
-    } catch (err) {
+    } catch {
       setError('Network error. Please try again.');
     } finally {
       setLoading(false);
@@ -152,7 +151,7 @@ export default function LoginPage() {
       } else {
         setError(data.error || 'Invalid OTP. Please enter 123456 in dev mode.');
       }
-    } catch (err) {
+    } catch {
       setError('Network error. Please try again.');
     } finally {
       setLoading(false);
@@ -168,13 +167,13 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 flex flex-col justify-between selection:bg-[#E86A33] selection:text-white">
+    <div className="min-h-screen bg-white text-slate-900 flex flex-col justify-between selection:bg-[#E86A33] selection:text-white overflow-x-clip">
       {/* ── Public Navbar (Preserved as requested) ── */}
       <PublicNavbar />
 
       <main className="flex-1 w-full flex flex-col lg:flex-row items-stretch">
         {/* ── LEFT HALF: Dynamic Looping Background Video Sequence with Official Logo ── */}
-        <div className="w-full lg:w-1/2 min-h-[320px] sm:min-h-[380px] lg:min-h-[calc(100vh-4.5rem)] relative overflow-hidden bg-slate-950 flex items-center justify-center shrink-0">
+        <div className="w-full lg:w-1/2 min-h-[220px] sm:min-h-[320px] lg:min-h-[calc(100dvh-4.5rem)] relative overflow-hidden bg-slate-950 flex items-center justify-center shrink-0">
           {/* Alternating Video Clips with onEnded auto-advance */}
           <video
             key={BACKGROUND_VIDEOS[videoIndex]}
@@ -366,7 +365,7 @@ export default function LoginPage() {
                         value={digit}
                         onChange={(e) => handleOtpChange(index, e.target.value)}
                         onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                        className="w-11 h-13 sm:w-12 sm:h-14 text-center bg-[#F4F4F6] border border-transparent rounded-xl text-xl font-bold text-slate-900 focus:bg-white focus:border-[#E86A33] focus:ring-2 focus:ring-[#E86A33]/15 focus:outline-none transition-all font-mono"
+                        className="flex-1 max-w-12 min-w-0 h-12 sm:h-14 text-center bg-[#F4F4F6] border border-transparent rounded-xl text-lg sm:text-xl font-bold text-slate-900 focus:bg-white focus:border-[#E86A33] focus:ring-2 focus:ring-[#E86A33]/15 focus:outline-none transition-all font-mono"
                       />
                     ))}
                   </div>

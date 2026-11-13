@@ -14,7 +14,6 @@ import {
   IndianRupee,
   CheckCircle2,
   Calendar,
-  ExternalLink,
 } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 
@@ -46,7 +45,7 @@ export default function FacilityCard({ facility, onBookVisit, isFreePreview }: F
   const detailUrl = `/homes/${facility.referenceId || facility.id}${isFreePreview ? '?preview=1' : ''}`;
 
   return (
-    <div className="group bg-white rounded-3xl border border-slate-200/80 shadow-xs hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden flex flex-col justify-between">
+    <div className="group bg-white rounded-3xl border border-slate-200/80 shadow-xs hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden flex flex-col justify-between min-w-0">
       {/* ── 1. Photo Carousel Container ── */}
       <div className="relative aspect-16/10 bg-slate-100 overflow-hidden select-none">
         <Link href={detailUrl} className="block w-full h-full">
@@ -62,28 +61,28 @@ export default function FacilityCard({ facility, onBookVisit, isFreePreview }: F
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 pointer-events-none" />
 
         {/* Top Badges */}
-        <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between pointer-events-none">
+        <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/95 backdrop-blur-md shadow-xs text-emerald-800 text-[11px] font-extrabold border border-emerald-200">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+            <div className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1 rounded-full bg-white/95 backdrop-blur-md shadow-xs text-emerald-800 text-[10px] sm:text-[11px] font-extrabold border border-emerald-200">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
               <span>{t.directory.card.verified}</span>
             </div>
             {isFreePreview && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-600/90 text-white text-[10px] font-black uppercase tracking-wider backdrop-blur-md shadow-xs">
+              <span className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-full bg-emerald-600/90 text-white text-[9px] sm:text-[10px] font-black uppercase tracking-wider backdrop-blur-md shadow-xs">
                 Free Full Preview
               </span>
             )}
           </div>
         </div>
 
-        {/* Carousel Navigation Arrows (desktop hover) */}
+        {/* Carousel Navigation Arrows (visible on touch/mobile, hover on desktop) */}
         {photos.length > 1 && (
           <>
             <button
               type="button"
               onClick={handlePrevPhoto}
               aria-label="Previous Photo"
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-slate-800 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md cursor-pointer hover:scale-105 active:scale-95"
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-slate-800 flex items-center justify-center opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shadow-md cursor-pointer hover:scale-105 active:scale-95"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -91,7 +90,7 @@ export default function FacilityCard({ facility, onBookVisit, isFreePreview }: F
               type="button"
               onClick={handleNextPhoto}
               aria-label="Next Photo"
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-slate-800 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md cursor-pointer hover:scale-105 active:scale-95"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-slate-800 flex items-center justify-center opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shadow-md cursor-pointer hover:scale-105 active:scale-95"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -112,25 +111,25 @@ export default function FacilityCard({ facility, onBookVisit, isFreePreview }: F
 
         {/* Starting Price Tag Ribbon */}
         <div className="absolute bottom-3 right-3 pointer-events-none">
-          <div className="px-3 py-1 bg-black/75 backdrop-blur-md rounded-xl text-white text-right">
-            <span className="text-[10px] text-slate-300 block uppercase font-bold tracking-wider leading-none">
+          <div className="px-2.5 sm:px-3 py-1 bg-black/75 backdrop-blur-md rounded-xl text-white text-right">
+            <span className="text-[9px] sm:text-[10px] text-slate-300 block uppercase font-bold tracking-wider leading-none">
               {t.directory.card.startingFrom}
             </span>
-            <span className="text-sm font-black text-white flex items-center gap-0.5 justify-end mt-0.5">
+            <span className="text-xs sm:text-sm font-black text-white flex items-center gap-0.5 justify-end mt-0.5">
               <IndianRupee className="w-3.5 h-3.5 text-[#E86A33]" />
               {facility.startingPrice.toLocaleString('en-IN')}
-              <span className="text-[11px] font-normal text-slate-300">{t.directory.card.perMonth}</span>
+              <span className="text-[10px] sm:text-[11px] font-normal text-slate-300">{t.directory.card.perMonth}</span>
             </span>
           </div>
         </div>
       </div>
 
       {/* ── 2. Card Content ── */}
-      <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-        <div className="space-y-2">
+      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-4 min-w-0">
+        <div className="space-y-2 min-w-0">
           {/* Rating and Distance Banner */}
-          <div className="flex items-center justify-between text-xs">
-            <div className="flex items-center gap-1 text-slate-900 font-bold">
+          <div className="flex items-center justify-between gap-2 text-xs">
+            <div className="flex items-center gap-1 text-slate-900 font-bold shrink-0">
               <div className="flex items-center text-amber-500">
                 <Star className="w-3.5 h-3.5 fill-amber-400 stroke-amber-500" />
               </div>
@@ -138,7 +137,7 @@ export default function FacilityCard({ facility, onBookVisit, isFreePreview }: F
               <span className="text-slate-400 font-normal">({facility.reviewCount})</span>
             </div>
 
-            <span className="text-[11px] font-semibold text-[#E86A33] bg-orange-50 px-2 py-0.5 rounded-full">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-[#E86A33] bg-orange-50 px-2 py-0.5 rounded-full truncate">
               {facility.distanceLandmark}
             </span>
           </div>
@@ -161,24 +160,24 @@ export default function FacilityCard({ facility, onBookVisit, isFreePreview }: F
           {/* Care Feature Pills */}
           <div className="flex flex-wrap gap-1.5 pt-1.5">
             {facility.services.assistedLiving && (
-              <span className="px-2.5 py-1 rounded-lg bg-orange-50 text-[#E86A33] text-[11px] font-bold border border-orange-200/60 flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" />
-                {t.directory.search.careAssisted}
+              <span className="px-2 sm:px-2.5 py-1 rounded-lg bg-orange-50 text-[#E86A33] text-[10px] sm:text-[11px] font-bold border border-orange-200/60 flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3 shrink-0" />
+                <span>{t.directory.search.careAssisted}</span>
               </span>
             )}
             {facility.services.palliativeCare && (
-              <span className="px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 text-[11px] font-bold border border-purple-200/60 flex items-center gap-1">
-                <HeartPulse className="w-3 h-3" />
-                {t.directory.search.carePalliative}
+              <span className="px-2 sm:px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 text-[10px] sm:text-[11px] font-bold border border-purple-200/60 flex items-center gap-1">
+                <HeartPulse className="w-3 h-3 shrink-0" />
+                <span>{t.directory.search.carePalliative}</span>
               </span>
             )}
             {facility.medical.doctorVisits && (
-              <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 text-[11px] font-bold border border-emerald-200/60 flex items-center gap-1">
-                <Hospital className="w-3 h-3" />
-                {t.directory.card.doctorOnCall}
+              <span className="px-2 sm:px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 text-[10px] sm:text-[11px] font-bold border border-emerald-200/60 flex items-center gap-1">
+                <Hospital className="w-3 h-3 shrink-0" />
+                <span>{t.directory.card.doctorOnCall}</span>
               </span>
             )}
-            <span className="px-2 py-1 rounded-lg bg-slate-100 text-slate-600 text-[11px] font-semibold">
+            <span className="px-2 py-1 rounded-lg bg-slate-100 text-slate-600 text-[10px] sm:text-[11px] font-semibold">
               {t.directory.card.cap} {facility.capacity} {t.directory.card.residents}
             </span>
           </div>
@@ -191,18 +190,18 @@ export default function FacilityCard({ facility, onBookVisit, isFreePreview }: F
             <button
               type="button"
               onClick={() => onBookVisit?.(facility)}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-all cursor-pointer hover:scale-101 active:scale-98"
+              className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-[11px] sm:text-xs font-bold transition-all cursor-pointer hover:scale-101 active:scale-98 whitespace-nowrap"
             >
-              <Calendar className="w-3.5 h-3.5 text-slate-600" />
-              <span>{t.directory.card.bookVisit}</span>
+              <Calendar className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+              <span className="truncate">{t.directory.card.bookVisit}</span>
             </button>
 
             {/* Primary: View Details */}
             <Link
               href={detailUrl}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full bg-[#E86A33] hover:bg-[#D85820] text-white text-xs font-bold shadow-xs hover:shadow-md transition-all cursor-pointer hover:scale-101 active:scale-98"
+              className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-full bg-[#E86A33] hover:bg-[#D85820] text-white text-[11px] sm:text-xs font-bold shadow-xs hover:shadow-md transition-all cursor-pointer hover:scale-101 active:scale-98 whitespace-nowrap"
             >
-              <span>{t.directory.card.viewDetails}</span>
+              <span className="truncate">{t.directory.card.viewDetails}</span>
             </Link>
           </div>
         </div>

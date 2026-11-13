@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
 
     try {
       const client = await clientPromise;
-      const db = client.db();
+      const db = client.db(process.env.MONGODB_DB || 'merabetta');
       
       const session = await db.collection('sessions').findOne({ token });
       if (session && session.expiresAt > new Date()) {
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     let userDoc: any = null;
     try {
       const client = await clientPromise;
-      const db = client.db();
+      const db = client.db(process.env.MONGODB_DB || 'merabetta');
       const { ObjectId } = await import('mongodb');
       try {
         userDoc = await db.collection('users').findOne({ _id: new ObjectId(userId) });

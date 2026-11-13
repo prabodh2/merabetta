@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
 
     try {
       const client = await clientPromise;
-      const db = client.db();
+      const db = client.db(process.env.MONGODB_DB || 'merabetta');
       
       const session = await db.collection('otp_sessions').findOne({ phone, otp });
       if (session && session.expiresAt > new Date()) {
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     if (!dbError) {
       try {
         const client = await clientPromise;
-        const db = client.db();
+        const db = client.db(process.env.MONGODB_DB || 'merabetta');
         
         let user: any = await db.collection('users').findOne({ phone });
         if (!user) {

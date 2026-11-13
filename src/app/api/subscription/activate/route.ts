@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
 
     try {
       const client = await clientPromise;
-      const db = client.db();
+      const db = client.db(process.env.MONGODB_DB || 'merabetta');
       const session = await db.collection('sessions').findOne({ token });
       if (session && session.expiresAt > new Date()) {
         userId = session.userId;
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
 
     try {
       const client = await clientPromise;
-      const db = client.db();
+      const db = client.db(process.env.MONGODB_DB || 'merabetta');
       const { ObjectId } = await import('mongodb');
 
       try {
