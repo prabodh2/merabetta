@@ -3,7 +3,7 @@
 import React from 'react';
 import { EnrollmentFormData, UploadedFileItem } from '../types/enrollment';
 import FileUploadCard from './FileUploadCard';
-import { FileUp, ShieldAlert } from 'lucide-react';
+import { ShieldAlert } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 
 interface Section3Props {
@@ -12,7 +12,7 @@ interface Section3Props {
   errors?: Record<string, string>;
 }
 
-export default function Section3Documents({ formData, onChange }: Section3Props) {
+export default function Section3Documents({ formData, onChange, errors = {} }: Section3Props) {
   const { t } = useLanguage();
   const s = t.s3;
   const docs = s.docs;
@@ -51,25 +51,27 @@ export default function Section3Documents({ formData, onChange }: Section3Props)
           <FileUploadCard
             label={docs.registrationCertificate}
             sublabel={docs.registrationCertificateSub}
-            accept=".pdf,.jpg,.jpeg,.png"
+            accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"
             required={true}
             files={formData.documents.registrationCertificate}
             onFileChange={(val) => handleDocumentChange('registrationCertificate', val as UploadedFileItem)}
           />
+          {errors.registrationCertificate && <p className="text-xs text-rose-500">{errors.registrationCertificate}</p>}
 
           <FileUploadCard
             label={docs.panCard}
             sublabel={docs.panCardSub}
-            accept=".pdf,.jpg,.jpeg,.png"
+            accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"
             required={true}
             files={formData.documents.panCard}
             onFileChange={(val) => handleDocumentChange('panCard', val as UploadedFileItem)}
           />
+          {errors.panCard && <p className="text-xs text-rose-500">{errors.panCard}</p>}
 
           <FileUploadCard
             label={docs.gstCertificate}
             sublabel={docs.gstCertificateSub}
-            accept=".pdf,.jpg,.jpeg,.png"
+            accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"
             files={formData.documents.gstCertificate}
             onFileChange={(val) => handleDocumentChange('gstCertificate', val as UploadedFileItem)}
           />
@@ -77,64 +79,48 @@ export default function Section3Documents({ formData, onChange }: Section3Props)
           <FileUploadCard
             label={docs.addressProof}
             sublabel={docs.addressProofSub}
-            accept=".pdf,.jpg,.jpeg,.png"
+            accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"
             required={true}
             files={formData.documents.addressProof}
             onFileChange={(val) => handleDocumentChange('addressProof', val as UploadedFileItem)}
           />
+          {errors.addressProof && <p className="text-xs text-rose-500">{errors.addressProof}</p>}
 
           <FileUploadCard
             label={docs.representativeIdProof}
             sublabel={docs.representativeIdProofSub}
-            accept=".pdf,.jpg,.jpeg,.png"
+            accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"
             required={true}
             files={formData.documents.representativeIdProof}
             onFileChange={(val) => handleDocumentChange('representativeIdProof', val as UploadedFileItem)}
           />
+          {errors.representativeIdProof && <p className="text-xs text-rose-500">{errors.representativeIdProof}</p>}
 
           <FileUploadCard
             label={docs.bankAccountDetails}
             sublabel={docs.bankAccountDetailsSub}
-            accept=".pdf,.jpg,.jpeg,.png"
+            accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"
+            required={true}
             files={formData.documents.bankAccountDetails}
             onFileChange={(val) => handleDocumentChange('bankAccountDetails', val as UploadedFileItem)}
           />
+          {errors.bankAccountDetails && <p className="text-xs text-rose-500">{errors.bankAccountDetails}</p>}
         </div>
       </div>
 
-      {/* Card 2: Facility Media & Licenses */}
+      {/* Card 2: Additional licenses */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-5 md:p-6 space-y-4">
         <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-2.5">
-          {s.cardMedia}
+          Licenses / Certificates
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="md:col-span-2">
-            <FileUploadCard
-              label={docs.facilityPhotographs}
-              sublabel={docs.facilityPhotographsSub}
-              accept=".jpg,.jpeg,.png"
-              multiple={true}
-              maxSizeMb={20}
-              files={formData.documents.facilityPhotographs}
-              onFileChange={(val) => handleDocumentChange('facilityPhotographs', val as UploadedFileItem[])}
-            />
-          </div>
-
-          <FileUploadCard
-            label={docs.facilityVideo}
-            sublabel={docs.facilityVideoSub}
-            accept=".mp4,.mpg,.mov,.avi"
-            maxSizeMb={50}
-            files={formData.documents.facilityVideo}
-            onFileChange={(val) => handleDocumentChange('facilityVideo', val as UploadedFileItem)}
-          />
-
           <FileUploadCard
             label={docs.licensesCertificates}
             sublabel={docs.licensesCertificatesSub}
-            accept=".pdf,.jpg,.jpeg,.png"
+            accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"
             multiple={true}
+            maxFiles={10}
             files={formData.documents.licensesCertificates}
             onFileChange={(val) => handleDocumentChange('licensesCertificates', val as UploadedFileItem[])}
           />

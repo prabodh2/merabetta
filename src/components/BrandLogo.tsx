@@ -14,7 +14,9 @@ export default function BrandLogo({ className = '', size = 'md', variant = 'full
     lg: 'h-14',
   };
 
-  const src = variant === 'icon' ? '/merabetta_icon.svg' : '/merabetta_logo.svg';
+  const src = variant === 'icon'
+    ? '/enrollment/merabetta_icon.svg'
+    : '/enrollment/merabetta_logo.svg';
 
   return (
     <div className={`flex items-center ${className}`}>

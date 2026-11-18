@@ -49,7 +49,6 @@ function createDefaultFullData() {
     totalCapacity: "",
     currentResidents: "",
     activeResidents: "",
-    bedRiddenResidents: "",
 
     medicalFacilities: {
       doctorVisits: false,

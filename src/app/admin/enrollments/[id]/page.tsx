@@ -7,6 +7,7 @@ import BrandLogo from '@/components/BrandLogo';
 import { EnrollmentRecord, EnrollmentStatus, UploadedFileItem } from '@/types/enrollment';
 import { exportEnrollmentsToExcel } from '@/utils/adminExport';
 import { updateRecordInCache } from '@/utils/adminCache';
+import { apiUrl, readApiResponse } from '@/services/apiClient';
 import {
   ArrowLeft,
   Building2,
@@ -141,15 +142,16 @@ export default function RegistrationDetailPage() {
         [docKey]: updatedItem,
       };
 
-      const res = await fetch(`/api/admin/enrollments/${id}`, {
-        method: 'PATCH',
+      const res = await fetch(apiUrl(`/admin/enrollments/${id}`), {
+        method: 'PUT',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           documents: updatedDocs,
         }),
       });
 
-      const data = await res.json();
+      const data = await readApiResponse<Record<string, any>>(res);
       if (data.success && data.record) {
         setRecord(data.record);
         setPreviewDoc(updatedItem);
@@ -183,8 +185,8 @@ export default function RegistrationDetailPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/admin/enrollments/${id}`);
-      const data = await res.json();
+      const res = await fetch(apiUrl(`/admin/enrollments/${id}`), { credentials: 'include' });
+      const data = await readApiResponse<Record<string, any>>(res);
       if (data.success && data.record) {
         setRecord(data.record);
         setAdminNotes(data.record.adminNotes || '');
@@ -207,8 +209,9 @@ export default function RegistrationDetailPage() {
     if (!id) return;
     setIsUpdatingStatus(true);
     try {
-      const res = await fetch(`/api/admin/enrollments/${id}`, {
+      const res = await fetch(`${apiUrl(`/admin/enrollments/${id}`)}/status`, {
         method: 'PATCH',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           status,
@@ -216,7 +219,7 @@ export default function RegistrationDetailPage() {
           reviewedBy: 'Admin Team',
         }),
       });
-      const data = await res.json();
+      const data = await readApiResponse<Record<string, any>>(res);
       if (data.success && data.record) {
         setRecord(data.record);
         setAdminNotes(data.record.adminNotes || '');
@@ -239,8 +242,9 @@ export default function RegistrationDetailPage() {
     if (!record) return;
     setIsSavingNotes(true);
     try {
-      const res = await fetch(`/api/admin/enrollments/${id}`, {
-        method: 'PATCH',
+      const res = await fetch(apiUrl(`/admin/enrollments/${id}`), {
+        method: 'PUT',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           status: record.status,
@@ -248,7 +252,7 @@ export default function RegistrationDetailPage() {
           reviewedBy: 'Admin Team',
         }),
       });
-      const data = await res.json();
+      const data = await readApiResponse<Record<string, any>>(res);
       if (data.success && data.record) {
         setRecord(data.record);
         setSaveNotesSuccess(true);
@@ -541,7 +545,7 @@ export default function RegistrationDetailPage() {
           </h2>
 
           {/* Capacity Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50/70 p-4 rounded-xl border border-slate-100">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50/70 p-4 rounded-xl border border-slate-100">
             <div>
               <span className="text-[11px] text-slate-500 font-medium block">Total Bed Capacity</span>
               <span className="text-lg font-black text-slate-900">{fd.totalCapacity || '0'}</span>
@@ -553,10 +557,6 @@ export default function RegistrationDetailPage() {
             <div>
               <span className="text-[11px] text-slate-500 font-medium block">Active Residents</span>
               <span className="text-lg font-black text-emerald-700">{fd.activeResidents || '0'}</span>
-            </div>
-            <div>
-              <span className="text-[11px] text-slate-500 font-medium block">Bed-Ridden Residents</span>
-              <span className="text-lg font-black text-amber-700">{fd.bedRiddenResidents || '0'}</span>
             </div>
           </div>
 

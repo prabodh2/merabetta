@@ -12,6 +12,7 @@ interface FileUploadCardProps {
   required?: boolean;
   multiple?: boolean;
   maxSizeMb?: number;
+  maxFiles?: number;
   files?: UploadedFileItem | UploadedFileItem[];
   onFileChange: (fileOrFiles: UploadedFileItem | UploadedFileItem[] | undefined) => void;
 }
@@ -23,6 +24,7 @@ export default function FileUploadCard({
   required = false,
   multiple = false,
   maxSizeMb = 10,
+  maxFiles = multiple ? 10 : 1,
   files,
   onFileChange,
 }: FileUploadCardProps) {
@@ -39,18 +41,15 @@ export default function FileUploadCard({
     ? [files]
     : [];
 
-  const readFileAsDataUrl = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target?.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  };
-
-  const handleFiles = async (fileObjects: FileList | null) => {
+  const handleFiles = (fileObjects: FileList | null) => {
     if (!fileObjects || fileObjects.length === 0) return;
     setErrorMsg(null);
+
+    const availableSlots = Math.max(0, maxFiles - (multiple ? fileList.length : 0));
+    if (availableSlots === 0) {
+      setErrorMsg(`You can attach up to ${maxFiles} files.`);
+      return;
+    }
 
     const filesToProcess: File[] = [];
     for (let i = 0; i < fileObjects.length; i++) {
@@ -59,32 +58,22 @@ export default function FileUploadCard({
         setErrorMsg(u.fileTooLarge(file.name, maxSizeMb));
         continue;
       }
-      filesToProcess.push(file);
+      if (filesToProcess.length < availableSlots) filesToProcess.push(file);
     }
 
     if (filesToProcess.length === 0) return;
 
     try {
-      const processedItems: UploadedFileItem[] = await Promise.all(
-        filesToProcess.map(async (file) => {
-          let dataUrl: string | undefined = undefined;
-          try {
-            // Read dataUrl for preview & playback in admin panel
-            dataUrl = await readFileAsDataUrl(file);
-          } catch (err) {
-            console.warn('Could not read file as dataUrl:', err);
-          }
-
+      const processedItems: UploadedFileItem[] = filesToProcess.map((file) => {
           return {
             id: `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
             name: file.name,
             size: file.size,
             type: file.type || 'application/octet-stream',
-            dataUrl,
+            file,
             uploadedAt: new Date().toISOString(),
           };
-        })
-      );
+        });
 
       if (multiple) {
         onFileChange([...fileList, ...processedItems]);
@@ -195,17 +184,9 @@ export default function FileUploadCard({
               className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-200 text-xs"
             >
               <div className="flex items-center gap-2 overflow-hidden">
-                {file.dataUrl ? (
-                  <img
-                    src={file.dataUrl}
-                    alt={file.name}
-                    className="w-8 h-8 object-cover rounded border border-slate-200"
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded bg-purple-100 flex items-center justify-center shrink-0">
-                    {getIcon(file.type)}
-                  </div>
-                )}
+                <div className="w-8 h-8 rounded bg-purple-100 flex items-center justify-center shrink-0">
+                  {getIcon(file.type)}
+                </div>
                 <div className="truncate max-w-[180px] sm:max-w-[280px]">
                   <p className="font-medium text-slate-800 truncate">{file.name}</p>
                   <p className="text-[10px] text-slate-400">{formatBytes(file.size)}</p>

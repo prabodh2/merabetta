@@ -7,6 +7,8 @@ export interface UploadedFileItem {
   size: number;
   type: string;
   dataUrl?: string;
+  /** The original browser File. Kept in memory for multipart submission. */
+  file?: File;
   uploadedAt: string;
 }
 
@@ -43,7 +45,6 @@ export interface EnrollmentFormData {
   totalCapacity: string;
   currentResidents: string;
   activeResidents: string;
-  bedRiddenResidents: string;
   
   // Medical Facilities (multi-select + other)
   medicalFacilities: {
@@ -116,7 +117,6 @@ export const INITIAL_FORM_DATA: EnrollmentFormData = {
   totalCapacity: '',
   currentResidents: '',
   activeResidents: '',
-  bedRiddenResidents: '',
 
   medicalFacilities: {
     doctorVisits: false,

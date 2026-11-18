@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import BrandLogo from '@/components/BrandLogo';
-import { EnrollmentRecord, EnrollmentStatus } from '@/types/enrollment';
+import { EnrollmentFormData, EnrollmentRecord, EnrollmentStatus } from '@/types/enrollment';
+import { apiUrl, readApiResponse } from '@/services/apiClient';
 import { exportEnrollmentsToExcel } from '@/utils/adminExport';
 import {
   Search,
@@ -40,6 +41,23 @@ import {
   getLastRefreshedTime,
   checkAndConsumeBrowserReload,
 } from '@/utils/adminCache';
+
+interface AdminListResponse {
+  success?: boolean;
+  records?: EnrollmentRecord[];
+  totalRecords?: number;
+  totalPages?: number;
+  stats?: { total: number; submitted: number; approved: number; rejected: number };
+  data?: Array<{
+    id: string;
+    homeName?: string;
+    city?: string;
+    contactPersonName?: string;
+    mobileNumber?: string;
+    status?: string;
+    submissionDate?: string;
+  }>;
+}
 
 export default function AdminEnrollmentsPage() {
   const [records, setRecords] = useState<EnrollmentRecord[]>([]);
@@ -145,12 +163,23 @@ export default function AdminEnrollmentsPage() {
         sortOrder,
       });
 
-      const res = await fetch(`/api/admin/enrollments?${params.toString()}`);
-      const data = await res.json();
+      const res = await fetch(`${apiUrl('/admin/enrollments')}?${params.toString()}`, { credentials: 'include' });
+      const data = await readApiResponse<AdminListResponse>(res);
 
-      if (data.success) {
-        const recs = data.records || [];
-        const totRecs = data.totalRecords || 0;
+      if (data.success || Array.isArray(data.data)) {
+        const recs = data.records || (data.data ?? []).map((item): EnrollmentRecord => ({
+          _id: item.id,
+          referenceId: item.id,
+          status: item.status === 'ACTIVE' ? 'approved' : item.status === 'REJECTED' ? 'rejected' : 'submitted',
+          submittedAt: item.submissionDate ?? '',
+          fullData: {
+            homeName: item.homeName ?? '',
+            city: item.city ?? '',
+            contactPersonName: item.contactPersonName ?? '',
+            mobileNumber: item.mobileNumber ?? '',
+          } as EnrollmentFormData,
+        }));
+        const totRecs = data.totalRecords ?? recs.length;
         const totPages = data.totalPages || 1;
         const st = data.stats || { total: totRecs, submitted: 0, approved: 0, rejected: 0 };
 
@@ -185,8 +214,9 @@ export default function AdminEnrollmentsPage() {
   // Quick Status Update
   const handleQuickStatusChange = async (id: string, newStatus: EnrollmentStatus) => {
     try {
-      const res = await fetch(`/api/admin/enrollments/${id}`, {
+      const res = await fetch(`${apiUrl(`/admin/enrollments/${id}`)}/status`, {
         method: 'PATCH',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
       });

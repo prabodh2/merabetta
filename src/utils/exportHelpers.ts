@@ -76,7 +76,6 @@ export function flattenFormData(data: EnrollmentFormData, referenceId: string) {
     'Total Resident Capacity': data.totalCapacity,
     'Current Residents': data.currentResidents,
     'Active Residents': data.activeResidents,
-    'Bed Ridden Residents': data.bedRiddenResidents,
     'Medical Facilities': medicalFacs || 'None selected',
     'Services Offered': services || 'None selected',
     'Facility Price Ranges': pricingSummary || 'None specified',

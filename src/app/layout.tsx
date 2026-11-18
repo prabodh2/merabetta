@@ -22,9 +22,9 @@ export const metadata: Metadata = {
   description:
     'Official partner and facility enrollment form for Old Age Homes & Assisted Living Facilities on Merabetta.',
   icons: {
-    icon: '/merabetta_logo.svg',
-    shortcut: '/merabetta_logo.svg',
-    apple: '/merabetta_logo.svg',
+    icon: '/enrollment/merabetta_logo.svg',
+    shortcut: '/enrollment/merabetta_logo.svg',
+    apple: '/enrollment/merabetta_logo.svg',
   },
 };
 

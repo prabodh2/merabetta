@@ -7,15 +7,22 @@ import Section1OrgInfo from '../components/Section1OrgInfo';
 import Section2FacilityDetails from '../components/Section2FacilityDetails';
 import Section3Documents from '../components/Section3Documents';
 import Section4CommercialTerms from '../components/Section4CommercialTerms';
+import BrandLogo from '../components/BrandLogo';
 
 import dynamic from 'next/dynamic';
 
 const SuccessModal = dynamic(() => import('../components/SuccessModal'), { ssr: false });
 
 import { EnrollmentFormData, INITIAL_FORM_DATA } from '../types/enrollment';
-import { ArrowLeft, ArrowRight, Loader2, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader2, Sparkles, Handshake, ShieldCheck } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
-import { submitEnrollment, notifyExternalEndpoint } from '../services/enrollmentApi';
+import {
+  cacheSelectedFiles,
+  cancelAllUploads,
+  restoreCachedDocuments,
+  submitResumableEnrollment,
+  UploadProgress,
+} from '../services/resumableEnrollmentUpload';
 
 const LOCAL_STORAGE_KEY = 'merabetta_enrollment_draft_v1';
 
@@ -29,31 +36,46 @@ export default function EnrollmentPage() {
   const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
-  const [referenceId, setReferenceId] = useState<string>('');
+  const [referenceId, setReferenceId] = useState<string>(
+    () => `MB-OAH-${Math.floor(100000 + Math.random() * 900000)}`
+  );
   const [isSuccessOpen, setIsSuccessOpen] = useState<boolean>(false);
+  const [hasStarted, setHasStarted] = useState<boolean>(false);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null);
 
-  // Generate Reference ID on load
+  // Restore text-only draft on load. File inputs intentionally start empty.
   useEffect(() => {
-    const randomCode = Math.floor(100000 + Math.random() * 900000);
-    setReferenceId(`MB-OAH-${randomCode}`);
-
-    // Load draft from localStorage
-    try {
-      const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setFormData(parsed);
-        setLastSavedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    const timer = window.setTimeout(() => {
+      try {
+        const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          setFormData({ ...INITIAL_FORM_DATA, ...parsed, documents: INITIAL_FORM_DATA.documents });
+          setLastSavedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+        }
+      } catch {
+        // Ignore parse error
       }
-    } catch {
-      // Ignore parse error
-    }
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      restoreCachedDocuments().then((documents) => {
+        if (documents) setFormData((current) => ({ ...current, documents }));
+      }).catch((error) => console.warn('Could not restore cached upload files:', error));
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   // Save draft automatically on change
   const saveDraft = useCallback((data: EnrollmentFormData) => {
     try {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+      const draftFields = Object.fromEntries(
+        Object.entries(data).filter(([key]) => key !== 'documents')
+      );
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(draftFields));
       const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       setLastSavedTime(now);
     } catch {
@@ -68,6 +90,11 @@ export default function EnrollmentPage() {
     };
     setFormData(updated);
     saveDraft(updated);
+    if (field === 'documents') {
+      void cacheSelectedFiles(value as EnrollmentFormData['documents']).catch((error) => {
+        console.warn('Could not cache selected files:', error);
+      });
+    }
 
     // Clear error for that field
     if (errors[field]) {
@@ -112,6 +139,14 @@ export default function EnrollmentPage() {
         if (!formData.currentResidents.trim() || parseInt(formData.currentResidents, 10) < 0) {
           stepErrors.currentResidents = err.currentResidents;
         }
+      }
+
+      if (step === 3) {
+        if (!formData.documents.registrationCertificate?.file) stepErrors.registrationCertificate = 'Registration certificate is required.';
+        if (!formData.documents.panCard?.file) stepErrors.panCard = 'PAN card is required.';
+        if (!formData.documents.addressProof?.file) stepErrors.addressProof = 'Address proof is required.';
+        if (!formData.documents.representativeIdProof?.file) stepErrors.representativeIdProof = 'Representative ID proof is required.';
+        if (!formData.documents.bankAccountDetails?.file) stepErrors.bankAccountDetails = 'Bank account details are required.';
       }
 
       if (step === 4) {
@@ -171,6 +206,7 @@ export default function EnrollmentPage() {
     } catch {
       // Ignore
     }
+    void cancelAllUploads().catch(() => undefined);
     const randomCode = Math.floor(100000 + Math.random() * 900000);
     setReferenceId(`MB-OAH-${randomCode}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -196,13 +232,10 @@ export default function EnrollmentPage() {
 
     setIsSubmitting(true);
     setSubmissionError(null);
+    setUploadProgress(null);
 
     try {
-      // ── Primary: save to MongoDB Atlas via service layer (with retry + timeout) ──
-      await submitEnrollment({ referenceId, formData });
-
-      // ── Secondary: notify optional external webhook (non-fatal) ──
-      await notifyExternalEndpoint({ referenceId, formData });
+      await submitResumableEnrollment(referenceId, formData, setUploadProgress);
 
       // Clear local draft on successful submission
       try {
@@ -215,16 +248,51 @@ export default function EnrollmentPage() {
       await new Promise((resolve) => setTimeout(resolve, 600));
 
       setIsSuccessOpen(true);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[handleSubmit] Submission failed after retries:', err);
       // Show inline error so user knows something went wrong
       setSubmissionError(
-        err?.message ?? 'Submission failed. Please check your connection and try again.'
+        err instanceof Error ? err.message : 'Submission failed. Please check your connection and try again.'
       );
     } finally {
       setIsSubmitting(false);
+      setUploadProgress(null);
     }
   };
+
+  if (!hasStarted) {
+    return (
+      <main className="min-h-screen bg-[#FFF8F3] px-4 py-8 flex items-center justify-center">
+        <section className="w-full max-w-3xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
+          <div className="h-2.5 bg-[#E86A33]" />
+          <div className="px-6 py-10 sm:px-12 sm:py-14 text-center">
+            <BrandLogo size="lg" className="justify-center mb-8" />
+            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-100 text-[#E86A33]">
+              <Handshake className="h-7 w-7" />
+            </div>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#E86A33]">Let&apos;s enroll</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+              Become a partner with MeraBetta
+            </h1>
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-slate-600 sm:text-base">
+              Join our trusted old age home booking network, reach more families, and help seniors find the care they deserve.
+            </p>
+            <div className="mx-auto mt-7 flex max-w-md items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-medium text-emerald-800">
+              <ShieldCheck className="h-4 w-4 shrink-0" />
+              Your documents are used only for verification and kept private.
+            </div>
+            <button
+              type="button"
+              onClick={() => setHasStarted(true)}
+              className="mt-8 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#E86A33] px-8 py-3.5 text-sm font-bold text-white shadow-md transition hover:bg-[#D85820]"
+            >
+              Get Started <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[#FFF8F3] py-6 px-3 sm:px-6 max-w-3xl mx-auto">
@@ -278,6 +346,24 @@ export default function EnrollmentPage() {
             <div className="bg-red-50 border border-red-200 text-red-700 text-xs font-medium px-4 py-3 rounded-xl flex items-start gap-2">
               <span className="mt-0.5">⚠️</span>
               <span>{submissionError}</span>
+            </div>
+          )}
+
+          {isSubmitting && uploadProgress && (
+            <div className="rounded-xl border border-orange-200 bg-orange-50 p-4 text-xs text-slate-700">
+              <div className="mb-2 flex items-center justify-between gap-3 font-semibold">
+                <span className="truncate">Uploading {uploadProgress.fileName}</span>
+                <span>{uploadProgress.percent}%</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-orange-100">
+                <div
+                  className="h-full rounded-full bg-[#E86A33] transition-all"
+                  style={{ width: `${uploadProgress.percent}%` }}
+                />
+              </div>
+              <p className="mt-2 text-[11px] text-slate-500">
+                File {uploadProgress.fileIndex + 1} of {uploadProgress.fileCount} · part {uploadProgress.partNumber} of {uploadProgress.partCount}. You can safely resume after a refresh.
+              </p>
             </div>
           )}
 

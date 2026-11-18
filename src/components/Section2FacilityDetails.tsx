@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-import { EnrollmentFormData } from '../types/enrollment';
-import { Users, HeartPulse, Sparkles, Activity, BedDouble, CheckSquare, IndianRupee } from 'lucide-react';
+import { EnrollmentFormData, UploadedFileItem } from '../types/enrollment';
+import FileUploadCard from './FileUploadCard';
+import { Users, HeartPulse, Sparkles, Activity, CheckSquare, IndianRupee } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 
 interface Section2Props {
@@ -69,6 +70,10 @@ export default function Section2FacilityDetails({ formData, onChange, errors = {
     }
 
     onChange('facilityPricing', updatedPricing);
+  };
+
+  const handleMediaChange = (key: 'facilityPhotographs' | 'facilityVideo', value: unknown) => {
+    onChange('documents', { ...formData.documents, [key]: value });
   };
 
   return (
@@ -144,21 +149,6 @@ export default function Section2FacilityDetails({ formData, onChange, errors = {
             />
           </div>
 
-          {/* Bed Ridden Residents */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1">
-              <BedDouble className="w-3.5 h-3.5 text-amber-500" />
-              {s.bedRiddenResidents}
-            </label>
-            <input
-              type="number"
-              min="0"
-              placeholder={s.bedRiddenResidentsPlaceholder}
-              value={formData.bedRiddenResidents}
-              onChange={(e) => onChange('bedRiddenResidents', e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#E86A33]/20 focus:border-[#E86A33]"
-            />
-          </div>
         </div>
       </div>
 
@@ -401,6 +391,30 @@ export default function Section2FacilityDetails({ formData, onChange, errors = {
             </div>
           )}
         </div>
+      </div>
+
+      <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-5 md:p-6 space-y-4">
+        <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-2.5">
+          Facility photographs & video
+        </h3>
+        <FileUploadCard
+          label="Facility Photographs"
+          sublabel="Upload up to 10 clear JPEG, PNG, or WebP images (5 MB each)."
+          accept=".jpg,.jpeg,.png,.webp"
+          multiple
+          maxSizeMb={5}
+          maxFiles={10}
+          files={formData.documents.facilityPhotographs}
+          onFileChange={(value) => handleMediaChange('facilityPhotographs', value as UploadedFileItem[])}
+        />
+        <FileUploadCard
+          label="Facility Video"
+          sublabel="Optional MP4 walkthrough video (maximum 100 MB)."
+          accept=".mp4"
+          maxSizeMb={100}
+          files={formData.documents.facilityVideo}
+          onFileChange={(value) => handleMediaChange('facilityVideo', value as UploadedFileItem)}
+        />
       </div>
     </div>
   );

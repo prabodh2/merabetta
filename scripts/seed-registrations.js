@@ -30,7 +30,6 @@ const registrations = [
     totalCapacity: "50",
     currentResidents: "38",
     activeResidents: "30",
-    bedRiddenResidents: "8",
 
     medicalFacilities: {
       doctorVisits: true,
@@ -192,7 +191,6 @@ const registrations = [
     totalCapacity: "60",
     currentResidents: "45",
     activeResidents: "36",
-    bedRiddenResidents: "9",
 
     medicalFacilities: {
       doctorVisits: true,
@@ -300,7 +298,6 @@ const registrations = [
     totalCapacity: "40",
     currentResidents: "29",
     activeResidents: "24",
-    bedRiddenResidents: "5",
 
     medicalFacilities: {
       doctorVisits: true,
@@ -372,7 +369,6 @@ const registrations = [
     totalCapacity: "70",
     currentResidents: "52",
     activeResidents: "44",
-    bedRiddenResidents: "8",
 
     medicalFacilities: {
       doctorVisits: true,
@@ -444,7 +440,6 @@ const registrations = [
     totalCapacity: "45",
     currentResidents: "31",
     activeResidents: "27",
-    bedRiddenResidents: "4",
 
     medicalFacilities: {
       doctorVisits: true,
@@ -516,7 +511,6 @@ const registrations = [
     totalCapacity: "35",
     currentResidents: "27",
     activeResidents: "22",
-    bedRiddenResidents: "5",
 
     medicalFacilities: {
       doctorVisits: true,
@@ -588,7 +582,6 @@ const registrations = [
     totalCapacity: "55",
     currentResidents: "41",
     activeResidents: "34",
-    bedRiddenResidents: "7",
 
     medicalFacilities: {
       doctorVisits: true,
@@ -660,7 +653,6 @@ const registrations = [
     totalCapacity: "30",
     currentResidents: "22",
     activeResidents: "18",
-    bedRiddenResidents: "4",
 
     medicalFacilities: {
       doctorVisits: true,
@@ -732,7 +724,6 @@ const registrations = [
     totalCapacity: "65",
     currentResidents: "48",
     activeResidents: "40",
-    bedRiddenResidents: "8",
 
     medicalFacilities: {
       doctorVisits: true,
@@ -804,7 +795,6 @@ const registrations = [
     totalCapacity: "40",
     currentResidents: "26",
     activeResidents: "21",
-    bedRiddenResidents: "5",
 
     medicalFacilities: {
       doctorVisits: true,
@@ -876,7 +866,6 @@ const registrations = [
     totalCapacity: "50",
     currentResidents: "35",
     activeResidents: "29",
-    bedRiddenResidents: "6",
 
     medicalFacilities: {
       doctorVisits: true,
@@ -948,7 +937,6 @@ const registrations = [
     totalCapacity: "32",
     currentResidents: "24",
     activeResidents: "19",
-    bedRiddenResidents: "5",
 
     medicalFacilities: {
       doctorVisits: true,
@@ -1020,7 +1008,6 @@ const registrations = [
     totalCapacity: "58",
     currentResidents: "42",
     activeResidents: "35",
-    bedRiddenResidents: "7",
 
     medicalFacilities: {
       doctorVisits: true,

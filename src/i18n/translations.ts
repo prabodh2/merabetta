@@ -113,8 +113,6 @@ const translations = {
       currentResidentsPlaceholder: 'e.g. 35',
       activeResidents: 'Active Residents',
       activeResidentsPlaceholder: 'e.g. 25',
-      bedRiddenResidents: 'Bed Ridden Residents',
-      bedRiddenResidentsPlaceholder: 'e.g. 10',
 
       cardMedical: 'Medical Facilities Available',
       selectAll: 'Select all that apply',
@@ -600,8 +598,6 @@ const translations = {
       currentResidentsPlaceholder: 'उदा. 35',
       activeResidents: 'सक्रिय रहिवासी',
       activeResidentsPlaceholder: 'उदा. 25',
-      bedRiddenResidents: 'अंथरुणावर खिळलेले रहिवासी',
-      bedRiddenResidentsPlaceholder: 'उदा. 10',
 
       cardMedical: 'उपलब्ध वैद्यकीय सुविधा',
       selectAll: 'लागू असलेले सर्व निवडा',
@@ -1082,8 +1078,6 @@ const translations = {
       currentResidentsPlaceholder: 'उदा. 35',
       activeResidents: 'सक्रिय निवासी',
       activeResidentsPlaceholder: 'उदा. 25',
-      bedRiddenResidents: 'शय्याग्रस्त निवासी',
-      bedRiddenResidentsPlaceholder: 'उदा. 10',
 
       cardMedical: 'उपलब्ध चिकित्सा सुविधाएं',
       selectAll: 'सभी लागू विकल्प चुनें',
