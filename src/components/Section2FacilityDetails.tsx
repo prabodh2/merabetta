@@ -206,18 +206,25 @@ export default function Section2FacilityDetails({ formData, onChange, errors = {
           </label>
 
           {formData.medicalFacilities.other && (
-            <input
-              type="text"
-              placeholder={s.otherMedicalPlaceholder}
-              value={formData.medicalFacilities.otherDetails || ''}
-              onChange={(e) =>
-                onChange('medicalFacilities', {
-                  ...formData.medicalFacilities,
-                  otherDetails: e.target.value,
-                })
-              }
-              className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#E86A33]/20 focus:border-[#E86A33]"
-            />
+            <>
+              <input
+                type="text"
+                placeholder={s.otherMedicalPlaceholder}
+                value={formData.medicalFacilities.otherDetails || ''}
+                onChange={(e) =>
+                  onChange('medicalFacilities', {
+                    ...formData.medicalFacilities,
+                    otherDetails: e.target.value,
+                  })
+                }
+                className={`w-full px-3.5 py-2.5 rounded-lg border text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#E86A33]/20 focus:border-[#E86A33] ${
+                  errors.medicalFacilitiesOther ? 'border-rose-400 bg-rose-50/30' : 'border-slate-300'
+                }`}
+              />
+              {errors.medicalFacilitiesOther && (
+                <p className="text-[11px] text-rose-500 mt-1 font-medium">{errors.medicalFacilitiesOther}</p>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -239,6 +246,7 @@ export default function Section2FacilityDetails({ formData, onChange, errors = {
           {SERVICE_KEYS.map((key) => {
             const isChecked = formData.servicesOffered[key] as boolean;
             const pricing = formData.facilityPricing?.[key] || { from: '', to: '' };
+            const pricingError = errors[`facilityPricing.${key}`];
 
             return (
               <div
@@ -321,6 +329,9 @@ export default function Section2FacilityDetails({ formData, onChange, errors = {
                       />
                     </div>
                   </div>
+                  {pricingError && (
+                    <p className="text-[11px] text-rose-500 mt-1 font-medium">{pricingError}</p>
+                  )}
                 </div>
               </div>
             );
@@ -360,8 +371,13 @@ export default function Section2FacilityDetails({ formData, onChange, errors = {
                       otherDetails: e.target.value,
                     })
                   }
-                  className="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#E86A33]/20 focus:border-[#E86A33]"
+                  className={`w-full px-3.5 py-2 rounded-lg border text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#E86A33]/20 focus:border-[#E86A33] ${
+                    errors.servicesOfferedOther ? 'border-rose-400 bg-rose-50/30' : 'border-slate-300'
+                  }`}
                 />
+                {errors.servicesOfferedOther && (
+                  <p className="text-[11px] text-rose-500 mt-1 font-medium">{errors.servicesOfferedOther}</p>
+                )}
               </div>
 
               <div>
@@ -387,6 +403,9 @@ export default function Section2FacilityDetails({ formData, onChange, errors = {
                     className="w-full px-2.5 py-2 rounded-lg border border-slate-300 text-xs font-medium focus:outline-none focus:ring-1 focus:ring-[#E86A33]"
                   />
                 </div>
+                {errors['facilityPricing.other'] && (
+                  <p className="text-[11px] text-rose-500 mt-1 font-medium">{errors['facilityPricing.other']}</p>
+                )}
               </div>
             </div>
           )}

@@ -139,6 +139,27 @@ export default function EnrollmentPage() {
         if (!formData.currentResidents.trim() || parseInt(formData.currentResidents, 10) < 0) {
           stepErrors.currentResidents = err.currentResidents;
         }
+        if (formData.medicalFacilities.other && !formData.medicalFacilities.otherDetails.trim()) {
+          stepErrors.medicalFacilitiesOther = 'Please describe the other medical facility.';
+        }
+        if (formData.servicesOffered.other && !formData.servicesOffered.otherDetails.trim()) {
+          stepErrors.servicesOfferedOther = 'Please describe the other service.';
+        }
+        for (const [service, enabled] of Object.entries(formData.servicesOffered)) {
+          if (service === 'otherDetails' || enabled !== true) continue;
+          const pricing = formData.facilityPricing?.[service];
+          const from = pricing?.from?.trim();
+          const to = pricing?.to?.trim();
+          if (!from || !to) {
+            stepErrors[`facilityPricing.${service}`] = 'Enter both minimum and maximum pricing.';
+            continue;
+          }
+          const fromAmount = Number(from);
+          const toAmount = Number(to);
+          if (!Number.isFinite(fromAmount) || !Number.isFinite(toAmount) || fromAmount < 0 || toAmount < fromAmount) {
+            stepErrors[`facilityPricing.${service}`] = 'Maximum pricing must be greater than or equal to minimum pricing.';
+          }
+        }
       }
 
       if (step === 3) {
@@ -225,9 +246,13 @@ export default function EnrollmentPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate final step
-    if (!validateCurrentStep(4)) {
-      return;
+    // Revalidate every step because users can revisit completed steps before submitting.
+    for (const step of [1, 2, 3, 4]) {
+      if (!validateCurrentStep(step)) {
+        setCurrentStep(step);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
     }
 
     setIsSubmitting(true);
