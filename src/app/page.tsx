@@ -139,10 +139,10 @@ export default function EnrollmentPage() {
         if (!formData.currentResidents.trim() || parseInt(formData.currentResidents, 10) < 0) {
           stepErrors.currentResidents = err.currentResidents;
         }
-        if (formData.medicalFacilities.other && !formData.medicalFacilities.otherDetails.trim()) {
+        if (formData.medicalFacilities.other && !formData.medicalFacilities.otherDetails?.trim()) {
           stepErrors.medicalFacilitiesOther = 'Please describe the other medical facility.';
         }
-        if (formData.servicesOffered.other && !formData.servicesOffered.otherDetails.trim()) {
+        if (formData.servicesOffered.other && !formData.servicesOffered.otherDetails?.trim()) {
           stepErrors.servicesOfferedOther = 'Please describe the other service.';
         }
         for (const [service, enabled] of Object.entries(formData.servicesOffered)) {
